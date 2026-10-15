@@ -23,10 +23,20 @@ async function generateDesign(lead: Lead) {
   const apiKey = process.env.V0_API_KEY
   if (!apiKey) return { design: fallback, generator: 'personalizado', generationMessage: 'A variável V0_API_KEY não está disponível nesta execução da aplicação.' }
   try {
-    const response = await fetch('https://api.v0.dev/v1/chat/completions', { method: 'POST', headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ model: 'v0-1.5-md', stream: false, messages: [
-      { role: 'system', content: 'Você é diretor de criação de sites profissionais para pequenos negócios brasileiros. Responda somente JSON válido com headline, subheadline, aboutTitle, aboutText, services (3 a 4 objetos title/description), features (array), primaryColor, accentColor, backgroundColor, ctaText e style. Crie conteúdo e paleta distintos para o ramo. Não invente preços, avaliações, depoimentos, prêmios, qualificações ou fatos não fornecidos. Cores hex de 6 dígitos.' },
-      { role: 'user', content: `Personalize o conteúdo de um site comercial premium. Empresa: ${lead.name}; segmento: ${lead.niche}; cidade: ${lead.city}; estado: ${lead.state}; informações adicionais: ${(lead.notes || 'nenhuma').slice(0, 900)}. Escreva em português brasileiro e devolva apenas o JSON solicitado.` }
-    ] }), signal: AbortSignal.timeout(25000), cache: 'no-store' })
+    // A antiga Models API /v1/chat/completions retorna 404. Usar a Platform API atual.
+    const response = await fetch('https://v0.app/api/v2/chats', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: `Gere somente um objeto JSON válido, sem markdown ou texto fora do JSON, com estas propriedades: headline, subheadline, aboutTitle, aboutText, services (3 a 4 objetos title/description), features (array), primaryColor, accentColor, backgroundColor, ctaText e style. Crie conteúdo e paleta distintos para o ramo. Não invente preços, avaliações, depoimentos, prêmios, qualificações ou fatos não fornecidos. Cores hex de 6 dígitos.\n\nEmpresa: ${lead.name}; segmento: ${lead.niche}; cidade: ${lead.city}; estado: ${lead.state}; informações adicionais: ${(lead.notes || 'nenhuma').slice(0, 900)}. Escreva em português brasileiro e devolva apenas o JSON solicitado.`,
+        system: 'Você é diretor de criação de sites profissionais para pequenos negócios brasileiros. Sua resposta deve ser somente o JSON solicitado.',
+        modelConfiguration: { modelId: 'v0-1.5-md', imageGenerations: false, thinking: false },
+        responseMode: 'sync',
+        chatPrivacy: 'private'
+      }),
+      signal: AbortSignal.timeout(30000),
+      cache: 'no-store'
+    })
     if (!response.ok) {
       const providerBody = await response.text().catch(() => '')
       let providerMessage = ''
@@ -34,26 +44,29 @@ async function generateDesign(lead: Lead) {
         const parsedError = JSON.parse(providerBody)
         providerMessage = typeof parsedError?.error?.message === 'string' ? parsedError.error.message : typeof parsedError?.message === 'string' ? parsedError.message : ''
       } catch {}
-      console.error('[v0-generation] API respondeu com status', response.status, providerMessage.slice(0, 300))
+      console.error('[v0-generation] Platform API respondeu com status', response.status, providerMessage.slice(0, 300))
       const safeMessage = providerMessage ? `Detalhe informado pela API: ${providerMessage.slice(0, 240)}` : 'A API não informou o motivo específico.'
-      return { design: fallback, generator: 'personalizado', generationMessage: `A API v0 respondeu com erro HTTP ${response.status}. ${safeMessage} Confira o endpoint, o modelo e se a chave pertence à API v0.` }
+      return { design: fallback, generator: 'personalizado', generationMessage: `A API v0 Platform respondeu com erro HTTP ${response.status}. ${safeMessage} Confira a chave e o acesso à API Platform.` }
     }
     const result = await response.json()
-    const content = result?.choices?.[0]?.message?.content
-    if (typeof content !== 'string') {
-      console.error('[v0-generation] Resposta sem conteúdo de texto válido')
-      return { design: fallback, generator: 'personalizado', generationMessage: 'A API v0 respondeu, mas não retornou o texto esperado. Verifique o modelo e o formato da resposta.' }
+    const content = typeof result?.text === 'string' ? result.text : typeof result?.messages?.slice?.(-1)?.[0]?.content === 'string' ? result.messages.slice(-1)[0].content : ''
+    if (!content) {
+      console.error('[v0-generation] Platform API respondeu sem texto', JSON.stringify({ id: result?.id, status: result?.latestVersion?.status }))
+      return { design: fallback, generator: 'personalizado', generationMessage: 'A API v0 respondeu, mas não retornou texto utilizável. Tente novamente e confira o status da geração na API.' }
     }
-    const parsed = JSON.parse(content.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim())
+    const cleaned = content.replace(/^\`\`\`(?:json)?\s*/i, '').replace(/\s*\`\`\`$/, '').trim()
+    const jsonStart = cleaned.indexOf('{')
+    const jsonEnd = cleaned.lastIndexOf('}')
+    const parsed = JSON.parse(jsonStart >= 0 && jsonEnd > jsonStart ? cleaned.slice(jsonStart, jsonEnd + 1) : cleaned)
     const hex = (v: unknown, d: string) => typeof v === 'string' && /^#[0-9a-fA-F]{6}$/.test(v) ? v : d
     const strings = (v: unknown, d: string[]) => Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string').slice(0, 4) : d
     const services = Array.isArray(parsed.services) ? parsed.services.filter((x: any) => typeof x?.title === 'string' && typeof x?.description === 'string').slice(0, 4) : fallback.services
     return { generator: 'v0-ai', design: { headline: typeof parsed.headline === 'string' ? parsed.headline.slice(0,140) : fallback.headline, subheadline: typeof parsed.subheadline === 'string' ? parsed.subheadline.slice(0,360) : fallback.subheadline, aboutTitle: typeof parsed.aboutTitle === 'string' ? parsed.aboutTitle.slice(0,140) : fallback.aboutTitle, aboutText: typeof parsed.aboutText === 'string' ? parsed.aboutText.slice(0,700) : fallback.aboutText, services: services.length ? services : fallback.services, features: strings(parsed.features, fallback.features), primaryColor: hex(parsed.primaryColor, fallback.primaryColor), accentColor: hex(parsed.accentColor, fallback.accentColor), backgroundColor: hex(parsed.backgroundColor, fallback.backgroundColor), heroImage: fallback.heroImage, ctaText: typeof parsed.ctaText === 'string' ? parsed.ctaText.slice(0,50) : fallback.ctaText, style: typeof parsed.style === 'string' ? parsed.style.slice(0,60) : fallback.style } }
   } catch (error) {
-    console.error('[v0-generation] Falha ao gerar conteúdo:', error instanceof Error ? error.message : 'erro desconhecido')
+    console.error('[v0-generation] Falha na Platform API:', error instanceof Error ? error.message : 'erro desconhecido')
     const message = error instanceof Error && error.name === 'TimeoutError'
-      ? 'A API v0 demorou demais para responder (tempo limite de 25 segundos).'
-      : 'Não foi possível concluir a geração com a API v0. Confira a chave, o acesso ao modelo e os registros da Vercel.'
+      ? 'A API v0 demorou demais para responder (tempo limite de 30 segundos).'
+      : 'Não foi possível concluir a geração com a API v0 Platform. Confira a chave, o acesso à API e os registros da Vercel.'
     return { design: fallback, generator: 'personalizado', generationMessage: message }
   }
 }
