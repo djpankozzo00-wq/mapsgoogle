@@ -21,22 +21,34 @@ function makeDesign(lead: Lead): Design {
 async function generateDesign(lead: Lead) {
   const fallback = makeDesign(lead)
   const apiKey = process.env.V0_API_KEY
-  if (!apiKey) return { design: fallback, generator: 'personalizado' }
+  if (!apiKey) return { design: fallback, generator: 'personalizado', generationMessage: 'A variável V0_API_KEY não está disponível nesta execução da aplicação.' }
   try {
     const response = await fetch('https://api.v0.dev/v1/chat/completions', { method: 'POST', headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ model: 'v0-1.5-md', stream: false, messages: [
       { role: 'system', content: 'Você é diretor de criação de sites profissionais para pequenos negócios brasileiros. Responda somente JSON válido com headline, subheadline, aboutTitle, aboutText, services (3 a 4 objetos title/description), features (array), primaryColor, accentColor, backgroundColor, ctaText e style. Crie conteúdo e paleta distintos para o ramo. Não invente preços, avaliações, depoimentos, prêmios, qualificações ou fatos não fornecidos. Cores hex de 6 dígitos.' },
       { role: 'user', content: `Personalize o conteúdo de um site comercial premium. Empresa: ${lead.name}; segmento: ${lead.niche}; cidade: ${lead.city}; estado: ${lead.state}; informações adicionais: ${(lead.notes || 'nenhuma').slice(0, 900)}. Escreva em português brasileiro e devolva apenas o JSON solicitado.` }
     ] }), signal: AbortSignal.timeout(25000), cache: 'no-store' })
-    if (!response.ok) return { design: fallback, generator: 'personalizado' }
+    if (!response.ok) {
+      console.error('[v0-generation] API respondeu com status', response.status)
+      return { design: fallback, generator: 'personalizado', generationMessage: `A API v0 respondeu com erro HTTP ${response.status}. Confira se a chave está válida e tem acesso ao modelo solicitado.` }
+    }
     const result = await response.json()
     const content = result?.choices?.[0]?.message?.content
-    if (typeof content !== 'string') return { design: fallback, generator: 'personalizado' }
+    if (typeof content !== 'string') {
+      console.error('[v0-generation] Resposta sem conteúdo de texto válido')
+      return { design: fallback, generator: 'personalizado', generationMessage: 'A API v0 respondeu, mas não retornou o texto esperado. Verifique o modelo e o formato da resposta.' }
+    }
     const parsed = JSON.parse(content.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim())
     const hex = (v: unknown, d: string) => typeof v === 'string' && /^#[0-9a-fA-F]{6}$/.test(v) ? v : d
     const strings = (v: unknown, d: string[]) => Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string').slice(0, 4) : d
     const services = Array.isArray(parsed.services) ? parsed.services.filter((x: any) => typeof x?.title === 'string' && typeof x?.description === 'string').slice(0, 4) : fallback.services
     return { generator: 'v0-ai', design: { headline: typeof parsed.headline === 'string' ? parsed.headline.slice(0,140) : fallback.headline, subheadline: typeof parsed.subheadline === 'string' ? parsed.subheadline.slice(0,360) : fallback.subheadline, aboutTitle: typeof parsed.aboutTitle === 'string' ? parsed.aboutTitle.slice(0,140) : fallback.aboutTitle, aboutText: typeof parsed.aboutText === 'string' ? parsed.aboutText.slice(0,700) : fallback.aboutText, services: services.length ? services : fallback.services, features: strings(parsed.features, fallback.features), primaryColor: hex(parsed.primaryColor, fallback.primaryColor), accentColor: hex(parsed.accentColor, fallback.accentColor), backgroundColor: hex(parsed.backgroundColor, fallback.backgroundColor), heroImage: fallback.heroImage, ctaText: typeof parsed.ctaText === 'string' ? parsed.ctaText.slice(0,50) : fallback.ctaText, style: typeof parsed.style === 'string' ? parsed.style.slice(0,60) : fallback.style } }
-  } catch { return { design: fallback, generator: 'personalizado' } }
+  } catch (error) {
+    console.error('[v0-generation] Falha ao gerar conteúdo:', error instanceof Error ? error.message : 'erro desconhecido')
+    const message = error instanceof Error && error.name === 'TimeoutError'
+      ? 'A API v0 demorou demais para responder (tempo limite de 25 segundos).'
+      : 'Não foi possível concluir a geração com a API v0. Confira a chave, o acesso ao modelo e os registros da Vercel.'
+    return { design: fallback, generator: 'personalizado', generationMessage: message }
+  }
 }
 
 export async function GET(request: NextRequest) {
@@ -67,7 +79,7 @@ export async function POST(request: NextRequest) {
   const price = Number(body?.price)
   if (!lead || typeof lead.name !== 'string' || typeof lead.niche !== 'string' || typeof lead.city !== 'string' || typeof lead.state !== 'string') return NextResponse.json({ error: 'Dados da empresa inválidos.' }, { status: 400 })
   if (!pixKey || !Number.isFinite(price) || price <= 0) return NextResponse.json({ error: 'Informe a chave Pix e um valor maior que zero.' }, { status: 400 })
-  const { design, generator } = await generateDesign(lead)
+  const { design, generator, generationMessage } = await generateDesign(lead)
   const base = lead.name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 48) || 'site'
   const slug = `${base}-${crypto.randomUUID().slice(0, 8)}`
   const siteData = { leadId: String(lead.id || ''), name: String(lead.name).slice(0, 160), niche: String(lead.niche).slice(0, 100), city: String(lead.city).slice(0, 100), state: String(lead.state).slice(0, 2), country: String(lead.country || 'Brasil').slice(0, 80), whatsapp: String(lead.whatsapp || '').replace(/\D/g, '').slice(0, 20), notes: String(lead.notes || '').slice(0, 1500), design, generator }
@@ -76,5 +88,5 @@ export async function POST(request: NextRequest) {
   const lookup = await fetch(`${url}/rest/v1/rpc/prospecmap_get_public_site`, { method: 'POST', headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ p_slug: slug }), cache: 'no-store' })
   const site = await lookup.json().catch(() => null)
   if (!lookup.ok || !site) return NextResponse.json({ error: 'A prévia foi criada, mas não foi possível carregar seus dados.' }, { status: 502 })
-  return NextResponse.json({ site, generator }, { status: 201 })
+  return NextResponse.json({ site, generator, generationMessage }, { status: 201 })
 }
