@@ -52,7 +52,7 @@ export default function Page() {
   const createSitePreview = async (lead: Lead) => {
     const priceText = window.prompt('Qual será o valor do site em reais? Ex.: 299,90', '299,90')
     if (priceText === null) return
-    const price = Number(priceText.replace(/\\./g, '').replace(',', '.'))
+    const price = Number(priceText.trim().replace(',', '.'))
     if (!Number.isFinite(price) || price <= 0) { window.alert('Informe um valor válido maior que zero.'); return }
     const pixKey = window.prompt('Informe a chave Pix que será enviada ao cliente:')
     if (!pixKey?.trim()) return
