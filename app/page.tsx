@@ -59,7 +59,7 @@ export default function Page() {
       const payload = await response.json()
       if (!response.ok) throw new Error(payload.error || 'Não foi possível pesquisar no Google Maps.')
       const results = Array.isArray(payload.results) ? payload.results : []
-      const imported: Lead[] = results.filter((place: { name?: string }) => Boolean(place.name?.trim())).map((place: { name: string; phone?: string; address?: string; website?: string; type?: string; rating?: number | string; reviews?: number | string; placeId?: string }, index: number) => ({
+      const imported: Lead[] = results.filter((place: { name?: string; phone?: string; website?: string }) => Boolean(place.name?.trim()) && Boolean(place.phone?.trim()) && !place.website?.trim()).map((place: { name: string; phone?: string; address?: string; website?: string; type?: string; rating?: number | string; reviews?: number | string; placeId?: string }) => ({
         id: crypto.randomUUID(),
         name: place.name.trim(),
         niche: place.type || mapsNiche.trim(),
