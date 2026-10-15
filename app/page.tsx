@@ -1,7 +1,7 @@
 'use client'
 
 import { FormEvent, useEffect, useMemo, useState } from 'react'
-import { ArrowLeft, Building2, Check, ChevronDown, CirclePlus, ExternalLink, Filter, MapPin, MessageCircle, Pencil, Search, Sparkles, StickyNote, Trash2, X } from 'lucide-react'
+import { ArrowLeft, Building2, Check, ChevronDown, CirclePlus, ExternalLink, Filter, MapPin, MessageCircle, Pencil, Search, Sparkles, StickyNote, Trash2, X, MapPinned, LoaderCircle } from 'lucide-react'
 
 type LeadStatus = 'A contactar' | 'Em negociação' | 'Fechado' | 'Rejeitado'
 type Lead = { id: string; name: string; niche: string; city: string; state: string; country: string; status: LeadStatus; whatsapp: string; notes: string }
@@ -23,6 +23,12 @@ export default function Page() {
   const [editingLead, setEditingLead] = useState<Lead | null>(null)
   const [demoLead, setDemoLead] = useState<Lead | null>(null)
   const [isLoaded, setIsLoaded] = useState(false)
+  const [mapsNiche, setMapsNiche] = useState('')
+  const [mapsCity, setMapsCity] = useState('')
+  const [mapsState, setMapsState] = useState('')
+  const [mapsLoading, setMapsLoading] = useState(false)
+  const [mapsError, setMapsError] = useState('')
+  const [mapsMessage, setMapsMessage] = useState('')
 
   useEffect(() => { const saved = window.localStorage.getItem('prospecmap-leads'); setLeads(saved ? JSON.parse(saved) : exampleLeads); setIsLoaded(true) }, [])
   useEffect(() => { if (isLoaded) window.localStorage.setItem('prospecmap-leads', JSON.stringify(leads)) }, [leads, isLoaded])
@@ -34,10 +40,80 @@ export default function Page() {
   const saveLead = (event: FormEvent<HTMLFormElement>) => { event.preventDefault(); const form = new FormData(event.currentTarget); const data = { name: String(form.get('name') || '').trim(), niche: String(form.get('niche') || '').trim(), city: String(form.get('city') || '').trim(), state: String(form.get('state') || '').trim().toUpperCase(), country: String(form.get('country') || 'Brasil').trim(), status: String(form.get('status') || 'A contactar') as LeadStatus, whatsapp: normalizePhone(String(form.get('whatsapp') || '')), notes: String(form.get('notes') || '').trim() }; setLeads((current) => editingLead ? current.map((lead) => lead.id === editingLead.id ? { ...editingLead, ...data } : lead) : [{ id: crypto.randomUUID(), ...data }, ...current]); setIsFormOpen(false) }
   const removeLead = (id: string) => { if (window.confirm('Excluir este lead?')) setLeads((current) => current.filter((lead) => lead.id !== id)) }
   const clearFilters = () => { setSearch(''); setNicheFilter('Todos'); setStatusFilter('Todos') }
+  const searchGoogleMaps = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (!mapsNiche.trim() || !mapsCity.trim() || !mapsState.trim()) {
+      setMapsError('Preencha o nicho, a cidade e o estado.')
+      setMapsMessage('')
+      return
+    }
+    setMapsLoading(true)
+    setMapsError('')
+    setMapsMessage('')
+    try {
+      const response = await fetch('/api/hasdata/search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ niche: mapsNiche.trim(), city: mapsCity.trim(), state: mapsState.trim() }),
+      })
+      const payload = await response.json()
+      if (!response.ok) throw new Error(payload.error || 'Não foi possível pesquisar no Google Maps.')
+      const results = Array.isArray(payload.results) ? payload.results : []
+      const imported: Lead[] = results.filter((place: { name?: string }) => Boolean(place.name?.trim())).map((place: { name: string; phone?: string; address?: string; website?: string; type?: string; rating?: number | string; reviews?: number | string; placeId?: string }, index: number) => ({
+        id: crypto.randomUUID(),
+        name: place.name.trim(),
+        niche: place.type || mapsNiche.trim(),
+        city: mapsCity.trim(),
+        state: mapsState.trim().toUpperCase(),
+        country: 'Brasil',
+        status: 'A contactar' as LeadStatus,
+        whatsapp: normalizePhone(place.phone || ''),
+        notes: [
+          place.address ? `Endereço: ${place.address}` : '',
+          place.website ? `Site: ${place.website}` : '',
+          place.rating !== undefined ? `Avaliação Google: ${place.rating}${place.reviews !== undefined ? ` (${place.reviews} avaliações)` : ''}` : '',
+          place.placeId ? `Google Maps ID: ${place.placeId}` : '',
+        ].filter(Boolean).join(' · '),
+      }))
+      const existingKeys = new Set(leads.map((lead) => `${lead.name.toLowerCase()}|${lead.city.toLowerCase()}|${lead.state.toLowerCase()}`))
+      const uniqueImported = imported.filter((lead, index) => {
+        const key = `${lead.name.toLowerCase()}|${lead.city.toLowerCase()}|${lead.state.toLowerCase()}`
+        if (existingKeys.has(key)) return false
+        existingKeys.add(key)
+        return imported.findIndex((item) => `${item.name.toLowerCase()}|${item.city.toLowerCase()}|${item.state.toLowerCase()}` === key) === index
+      })
+      setLeads((current) => [...uniqueImported, ...current])
+      setMapsMessage(uniqueImported.length
+        ? `${uniqueImported.length} empresa(s) importada(s) para sua carteira.${imported.length > uniqueImported.length ? ` ${imported.length - uniqueImported.length} duplicada(s) ignorada(s).` : ''}`
+        : 'A pesquisa não trouxe empresas novas. Os resultados encontrados já estão na sua carteira.')
+    } catch (error) {
+      setMapsError(error instanceof Error ? error.message : 'Erro inesperado na pesquisa.')
+    } finally {
+      setMapsLoading(false)
+    }
+  }
 
   if (demoLead) return <DemoPage lead={demoLead} onBack={() => setDemoLead(null)} />
   return <main className="min-h-screen bg-[#f5f7fb] text-slate-950">
     <header className="bg-[#071b3a] text-white"><div className="mx-auto max-w-6xl px-4 pb-7 pt-5 sm:px-6 lg:px-8"><div className="flex items-center justify-between gap-4"><div className="flex items-center gap-3"><div className="flex size-10 items-center justify-center rounded-2xl bg-cyan-400 text-[#071b3a]"><Sparkles className="size-5" /></div><div><p className="text-lg font-bold">ProspecMap</p><p className="text-xs text-blue-200">{leads.length} leads na carteira</p></div></div><button onClick={openNew} className="flex shrink-0 items-center gap-2 rounded-xl bg-white px-3 py-2.5 text-sm font-bold text-[#071b3a] shadow-lg hover:bg-cyan-50" type="button"><CirclePlus className="size-4" /><span className="hidden sm:inline">Novo Lead</span><span className="sm:hidden">Novo</span></button></div><div className="mt-7"><p className="text-sm font-medium text-cyan-300">Painel de prospecção</p><h1 className="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">Encontre sua próxima oportunidade.</h1><p className="mt-2 text-sm leading-6 text-blue-100">Organize empresas do Google Maps e gere uma demonstração comercial em segundos.</p></div></div></header>
+    <section className="mx-auto max-w-6xl px-4 pt-6 sm:px-6 lg:px-8">
+      <form onSubmit={searchGoogleMaps} className="rounded-2xl border border-cyan-100 bg-white p-4 shadow-lg shadow-slate-900/5 sm:p-5">
+        <div className="flex items-start gap-3">
+          <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-cyan-50 text-cyan-700"><MapPinned className="size-5" /></div>
+          <div><h2 className="font-bold text-slate-900">Buscar empresas no Google Maps</h2><p className="mt-1 text-sm text-slate-500">Pesquisa real pela HasData. As empresas encontradas serão adicionadas à sua carteira.</p></div>
+        </div>
+        <div className="mt-4 grid gap-3 sm:grid-cols-3">
+          <label className="grid gap-1.5 text-sm font-semibold text-slate-700"><span>Nicho / tipo de empresa</span><input value={mapsNiche} onChange={(e) => setMapsNiche(e.target.value)} placeholder="Ex.: dentistas, pizzarias" className="h-11 min-w-0 rounded-xl border border-slate-200 px-3 font-normal outline-none focus:border-cyan-500" /></label>
+          <label className="grid gap-1.5 text-sm font-semibold text-slate-700"><span>Cidade</span><input value={mapsCity} onChange={(e) => setMapsCity(e.target.value)} placeholder="Ex.: Macaúbas" className="h-11 min-w-0 rounded-xl border border-slate-200 px-3 font-normal outline-none focus:border-cyan-500" /></label>
+          <label className="grid gap-1.5 text-sm font-semibold text-slate-700"><span>Estado</span><input value={mapsState} onChange={(e) => setMapsState(e.target.value)} placeholder="Ex.: BA" maxLength={2} className="h-11 min-w-0 rounded-xl border border-slate-200 px-3 font-normal uppercase outline-none focus:border-cyan-500" /></label>
+        </div>
+        <button type="submit" disabled={mapsLoading} className="mt-4 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#071b3a] px-4 text-sm font-bold text-white hover:bg-[#0d2c5c] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto">
+          {mapsLoading ? <LoaderCircle className="size-4 animate-spin" /> : <Search className="size-4" />}{mapsLoading ? 'Pesquisando empresas...' : 'Pesquisar e importar empresas'}
+        </button>
+        {mapsError && <p role="alert" className="mt-3 rounded-xl bg-red-50 p-3 text-sm font-medium text-red-700">{mapsError}</p>}
+        {mapsMessage && <p role="status" className="mt-3 rounded-xl bg-emerald-50 p-3 text-sm font-medium text-emerald-800">{mapsMessage}</p>}
+      </form>
+    </section>
     <section className="mx-auto -mt-5 max-w-6xl px-4 sm:px-6 lg:px-8"><div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-xl shadow-slate-900/5 sm:p-4"><label className="flex h-12 items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 focus-within:border-cyan-500"><Search className="size-5 text-slate-400" /><span className="sr-only">Buscar leads</span><input value={search} onChange={(e) => setSearch(e.target.value)} className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-slate-400" placeholder="Buscar por empresa, cidade ou nicho..." />{search && <button type="button" onClick={() => setSearch('')} aria-label="Limpar busca"><X className="size-4 text-slate-400" /></button>}</label><div className="mt-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-400"><Filter className="size-3.5" /> Filtros rápidos</div><div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3"><FilterSelect label="Nicho" value={nicheFilter} options={['Todos', ...niches]} onChange={setNicheFilter} /><FilterSelect label="Status" value={statusFilter} options={['Todos', ...statuses]} onChange={setStatusFilter} /><button type="button" onClick={clearFilters} className="h-10 rounded-lg border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-50">Limpar filtros</button></div></div></section>
     <section className="mx-auto max-w-6xl px-4 pb-12 pt-7 sm:px-6 lg:px-8"><div className="mb-4"><p className="text-sm font-semibold text-slate-500">Sua carteira</p><h2 className="text-xl font-bold tracking-tight text-slate-900">{filteredLeads.length} {filteredLeads.length === 1 ? 'lead encontrado' : 'leads encontrados'}</h2></div>{filteredLeads.length === 0 ? <div className="rounded-2xl border border-dashed border-slate-300 bg-white px-5 py-12 text-center"><Building2 className="mx-auto size-9 text-slate-300" /><p className="mt-3 font-semibold text-slate-700">Nenhum lead encontrado</p><p className="mt-1 text-sm text-slate-500">Ajuste os filtros ou adicione uma nova empresa.</p></div> : <div className="grid gap-4 md:grid-cols-2">{filteredLeads.map((lead) => <LeadCard key={lead.id} lead={lead} onEdit={() => openEdit(lead)} onDelete={() => removeLead(lead.id)} onDemo={() => setDemoLead(lead)} onStatusChange={(status) => setLeads((current) => current.map((item) => item.id === lead.id ? { ...item, status } : item))} />)}</div>}</section>
     {isFormOpen && <LeadForm lead={editingLead} onClose={() => setIsFormOpen(false)} onSubmit={saveLead} />}
