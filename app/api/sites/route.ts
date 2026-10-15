@@ -28,8 +28,15 @@ async function generateDesign(lead: Lead) {
       { role: 'user', content: `Personalize o conteúdo de um site comercial premium. Empresa: ${lead.name}; segmento: ${lead.niche}; cidade: ${lead.city}; estado: ${lead.state}; informações adicionais: ${(lead.notes || 'nenhuma').slice(0, 900)}. Escreva em português brasileiro e devolva apenas o JSON solicitado.` }
     ] }), signal: AbortSignal.timeout(25000), cache: 'no-store' })
     if (!response.ok) {
-      console.error('[v0-generation] API respondeu com status', response.status)
-      return { design: fallback, generator: 'personalizado', generationMessage: `A API v0 respondeu com erro HTTP ${response.status}. Confira se a chave está válida e tem acesso ao modelo solicitado.` }
+      const providerBody = await response.text().catch(() => '')
+      let providerMessage = ''
+      try {
+        const parsedError = JSON.parse(providerBody)
+        providerMessage = typeof parsedError?.error?.message === 'string' ? parsedError.error.message : typeof parsedError?.message === 'string' ? parsedError.message : ''
+      } catch {}
+      console.error('[v0-generation] API respondeu com status', response.status, providerMessage.slice(0, 300))
+      const safeMessage = providerMessage ? `Detalhe informado pela API: ${providerMessage.slice(0, 240)}` : 'A API não informou o motivo específico.'
+      return { design: fallback, generator: 'personalizado', generationMessage: `A API v0 respondeu com erro HTTP ${response.status}. ${safeMessage} Confira o endpoint, o modelo e se a chave pertence à API v0.` }
     }
     const result = await response.json()
     const content = result?.choices?.[0]?.message?.content
