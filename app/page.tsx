@@ -63,8 +63,9 @@ export default function Page() {
       if (!response.ok) throw new Error(data.error || 'Não foi possível criar a prévia.')
       setSites((current) => [data.site, ...current.filter((item) => item.id !== data.site.id)])
       const link = window.location.origin + '/site/' + data.site.slug
-      setSiteMessage('Link criado: ' + link)
-      try { await navigator.clipboard.writeText(link); setSiteMessage('Link criado e copiado: ' + link) } catch {}
+      const generationNote = data.generator === 'v0-ai' ? 'Site personalizado com IA v0' : 'Layout personalizado por segmento. Para geração com IA v0, configure V0_API_KEY na Vercel.'
+      setSiteMessage(generationNote + ' · Link criado: ' + link)
+      try { await navigator.clipboard.writeText(link); setSiteMessage(generationNote + ' · Link criado e copiado: ' + link) } catch {}
     } catch (error) { setSiteMessage(error instanceof Error ? error.message : 'Erro ao criar prévia.') }
     finally { setSiteBusy(null) }
   }
