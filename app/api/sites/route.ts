@@ -46,11 +46,13 @@ export async function POST(request: NextRequest) {
   const siteData = { leadId: String(lead.id || ''), name: String(lead.name).slice(0, 160), niche: String(lead.niche).slice(0, 100), city: String(lead.city).slice(0, 100), state: String(lead.state).slice(0, 2), country: String(lead.country || 'Brasil').slice(0, 80), whatsapp: String(lead.whatsapp || '').replace(/\D/g, '').slice(0, 20) }
   const response = await fetch(`${url}/rest/v1/prospecmap_sites?select=id,slug,site_data,payment_status,site_status,pix_key,price,created_at,paid_at,published_at`, {
     method: 'POST',
-    headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json', Prefer: 'return=representation' },
+    headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
     body: JSON.stringify({ slug, site_data: siteData, pix_key: pixKey, price, payment_status: 'pending', site_status: 'preview' }),
     cache: 'no-store',
   })
-  const data = await response.json().catch(() => null)
-  if (!response.ok) return NextResponse.json({ error: 'Não foi possível criar a prévia.' }, { status: 502 })
-  return NextResponse.json({ site: Array.isArray(data) ? data[0] : data }, { status: 201 })
+  if (!response.ok) { const error = await response.text().catch(() => ''); return NextResponse.json({ error: error.includes('row-level security') ? 'O banco bloqueou a criação da prévia. Verifique as permissões do projeto.' : 'Não foi possível criar a prévia.' }, { status: 502 }) }
+  const lookup = await fetch(`${url}/rest/v1/rpc/prospecmap_get_public_site`, { method: 'POST', headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ p_slug: slug }), cache: 'no-store' })
+  const site = await lookup.json().catch(() => null)
+  if (!lookup.ok || !site) return NextResponse.json({ error: 'A prévia foi criada, mas não foi possível carregar seus dados.' }, { status: 502 })
+  return NextResponse.json({ site }, { status: 201 })
 }
