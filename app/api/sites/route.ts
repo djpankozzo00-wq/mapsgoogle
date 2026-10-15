@@ -29,10 +29,10 @@ async function generateDesign(lead: Lead) {
       headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         message: `Gere somente um objeto JSON válido, sem markdown ou texto fora do JSON, com estas propriedades: headline, subheadline, aboutTitle, aboutText, services (3 a 4 objetos title/description), features (array), primaryColor, accentColor, backgroundColor, ctaText e style. Crie conteúdo e paleta distintos para o ramo. Não invente preços, avaliações, depoimentos, prêmios, qualificações ou fatos não fornecidos. Cores hex de 6 dígitos.\n\nEmpresa: ${lead.name}; segmento: ${lead.niche}; cidade: ${lead.city}; estado: ${lead.state}; informações adicionais: ${(lead.notes || 'nenhuma').slice(0, 900)}. Escreva em português brasileiro e devolva apenas o JSON solicitado.`,
-        system: 'Você é diretor de criação de sites profissionais para pequenos negócios brasileiros. Sua resposta deve ser somente o JSON solicitado.',
-        modelConfiguration: { modelId: 'v0-1.5-md', imageGenerations: false, thinking: false },
-        responseMode: 'sync',
-        chatPrivacy: 'private'
+        systemPrompt: 'Você é diretor de criação de sites profissionais para pequenos negócios brasileiros. Sua resposta deve ser somente o JSON solicitado.',
+        modelId: 'v0-pro',
+        imageGenerations: false,
+        privacy: 'private'
       }),
       signal: AbortSignal.timeout(30000),
       cache: 'no-store'
@@ -45,11 +45,12 @@ async function generateDesign(lead: Lead) {
         providerMessage = typeof parsedError?.error?.message === 'string' ? parsedError.error.message : typeof parsedError?.message === 'string' ? parsedError.message : ''
       } catch {}
       console.error('[v0-generation] Platform API respondeu com status', response.status, providerMessage.slice(0, 300))
-      const safeMessage = providerMessage ? `Detalhe informado pela API: ${providerMessage.slice(0, 240)}` : 'A API não informou o motivo específico.'
+      const safeMessage = providerMessage ? `Detalhe informado pela API: ${providerMessage.slice(0, 240)}` : providerBody ? `Resposta da API: ${providerBody.slice(0, 240)}` : 'A API não informou o motivo específico.'
       return { design: fallback, generator: 'personalizado', generationMessage: `A API v0 Platform respondeu com erro HTTP ${response.status}. ${safeMessage} Confira a chave e o acesso à API Platform.` }
     }
     const result = await response.json()
-    const content = typeof result?.text === 'string' ? result.text : typeof result?.messages?.slice?.(-1)?.[0]?.content === 'string' ? result.messages.slice(-1)[0].content : ''
+    const lastMessage = Array.isArray(result?.messages) ? result.messages.slice(-1)[0] : null
+    const content = typeof result?.text === 'string' ? result.text : typeof result?.content === 'string' ? result.content : typeof lastMessage?.content === 'string' ? lastMessage.content : Array.isArray(lastMessage?.parts) ? lastMessage.parts.map((part: any) => typeof part?.text === 'string' ? part.text : '').join('') : ''
     if (!content) {
       console.error('[v0-generation] Platform API respondeu sem texto', JSON.stringify({ id: result?.id, status: result?.latestVersion?.status }))
       return { design: fallback, generator: 'personalizado', generationMessage: 'A API v0 respondeu, mas não retornou texto utilizável. Tente novamente e confira o status da geração na API.' }
