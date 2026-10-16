@@ -180,37 +180,50 @@ export default function Page() {
     setLeads((current) => current.filter((item) => item.id !== id))
   }
   const generateUniqueSearchCombo = async () => {
-    const normalize = (value: string) => value.normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').trim().toLocaleLowerCase('pt-BR')
+    const normalize = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLocaleLowerCase('pt-BR')
     const used = new Set(usedSearchCombos)
-    const niches = allBusinessNiches
-    const availableStates = [...brazilStates].sort(() => Math.random() - 0.5)
+    const niches = [...allBusinessNiches]
+    const shuffledStates = [...brazilStates].sort(() => Math.random() - 0.5)
     setCitiesLoading(true)
     setMapsError('')
     setMapsMessage('')
     try {
-      for (const state of availableStates) {
-        const response = await fetch('https://servicodados.ibge.gov.br/api/v1/localidades/estados/' + state.uf + '/municipios?orderBy=nome')
-        if (!response.ok) continue
-        const cities = await response.json() as Array<{ nome: string }>
-        const shuffledCities = cities.sort(() => Math.random() - 0.5)
+      // Load states until we find a city/niche combination that has not been used.
+      const stateCityLists = await Promise.all(shuffledStates.map(async (state) => {
+        try {
+          const response = await fetch('https://servicodados.ibge.gov.br/api/v1/localidades/estados/' + state.uf + '/municipios?orderBy=nome')
+          if (!response.ok) return { state, cities: [] as Array<{ nome: string }> }
+          return { state, cities: await response.json() as Array<{ nome: string }> }
+        } catch {
+          return { state, cities: [] as Array<{ nome: string }> }
+        }
+      }))
+      const candidates: Array<{ state: typeof brazilStates[number]; city: string; niche: string; key: string }> = []
+      for (const entry of stateCityLists) {
+        const shuffledCities = [...entry.cities].sort(() => Math.random() - 0.5)
         for (const cityItem of shuffledCities) {
-          const shuffledNiches = [...niches].sort(() => Math.random() - 0.5)
-          for (const niche of shuffledNiches) {
-            const key = [niche, cityItem.nome, state.uf].map(normalize).join('|')
-            if (used.has(key)) continue
-            setMapsState(state.uf)
-            setMapsCities(cities.map((item) => item.nome))
-            setMapsNiche(niche)
-            setMapsCity(cityItem.nome)
-            setUsedSearchCombos((current) => current.includes(key) ? current : [...current, key])
-            setMapsMessage('Combinação inédita selecionada e salva neste navegador.')
-            return
+          for (const niche of [...niches].sort(() => Math.random() - 0.5)) {
+            const key = [niche, cityItem.nome, entry.state.uf].map(normalize).join('|')
+            if (!used.has(key)) candidates.push({ state: entry.state, city: cityItem.nome, niche, key })
           }
         }
       }
-      setMapsError('Todas as combinações disponíveis já foram usadas neste navegador.')
+      if (candidates.length === 0) {
+        setMapsError(stateCityLists.every((entry) => entry.cities.length === 0)
+          ? 'Não foi possível carregar as cidades do IBGE. Tente novamente.'
+          : 'Todas as combinações disponíveis já foram usadas neste navegador.')
+        return
+      }
+      const choice = candidates[Math.floor(Math.random() * candidates.length)]
+      const chosenStateCities = stateCityLists.find((entry) => entry.state.uf === choice.state.uf)?.cities ?? []
+      setMapsState(choice.state.uf)
+      setMapsCities(chosenStateCities.map((item) => item.nome))
+      setMapsNiche(choice.niche)
+      setMapsCity(choice.city)
+      setUsedSearchCombos((current) => current.includes(choice.key) ? current : [...current, choice.key])
+      setMapsMessage('Nicho, cidade e estado escolhidos aleatoriamente.')
     } catch {
-      setMapsError('Não foi possível carregar as cidades agora. Tente novamente.')
+      setMapsError('Não foi possível gerar a combinação agora. Tente novamente.')
     } finally {
       setCitiesLoading(false)
     }
