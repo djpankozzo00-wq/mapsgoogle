@@ -161,3 +161,33 @@
     @apply bg-background text-foreground;
   }
 }
+
+
+/* ProspecMap generated-site polish: restrained, segment-aware motion */
+.prospec-site { --brand-primary: #334155; --brand-accent: #c5a46d; }
+.prospec-site .brand-mark { box-shadow: 0 8px 24px color-mix(in srgb, var(--brand-primary) 25%, transparent); letter-spacing: -.04em; }
+.prospec-site .hero-section { isolation: isolate; }
+.prospec-site .hero-image { transform: scale(1.025); animation: pm-hero-settle 1.2s cubic-bezier(.2,.7,.2,1) both; }
+.prospec-site .hero-content { animation: pm-content-enter .8s cubic-bezier(.2,.7,.2,1) both; }
+.prospec-site .hero-orb { position:absolute; z-index:-5; width:20rem; height:20rem; border-radius:9999px; pointer-events:none; filter:blur(70px); opacity:.17; background:var(--brand-accent); }
+.prospec-site .hero-orb-one { top:-7rem; right:8%; animation:pm-float 10s ease-in-out infinite; }
+.prospec-site .hero-orb-two { bottom:-12rem; left:22%; width:16rem; height:16rem; opacity:.12; animation:pm-float 13s ease-in-out infinite reverse; }
+.prospec-site .service-card { position:relative; overflow:hidden; }
+.prospec-site .service-card::before { content:""; position:absolute; inset:0 auto 0 0; width:3px; background:var(--brand-accent); transform:scaleY(0); transform-origin:bottom; transition:transform .35s ease; }
+.prospec-site .service-card:hover::before { transform:scaleY(1); }
+.prospec-site .hero-section a, .prospec-site .site-footer, .prospec-site .content-section { transition: background-color .3s ease; }
+.prospec-site.effect-glow .hero-content a { box-shadow:0 0 0 1px color-mix(in srgb,var(--brand-accent) 50%,transparent),0 0 28px color-mix(in srgb,var(--brand-accent) 30%,transparent); }
+.prospec-site.effect-float .hero-content > div:last-child { animation:pm-float 7s ease-in-out infinite; }
+.prospec-site.effect-shimmer .hero-content a { position:relative; overflow:hidden; }
+.prospec-site.effect-shimmer .hero-content a::after { content:""; position:absolute; inset:-40% auto -40% -50%; width:35%; transform:rotate(18deg); background:linear-gradient(90deg,transparent,rgba(255,255,255,.42),transparent); animation:pm-shimmer 5.5s ease-in-out infinite; }
+.prospec-site.style-premium-escuro .service-card, .prospec-site.style-editorial-gastronomico .service-card { border-color:color-mix(in srgb,var(--brand-accent) 25%,#ffffff); }
+.prospec-site.style-elegante-beleza .brand-mark { border-radius:50%; }
+.prospec-site.style-clean-clinico .service-card { box-shadow:0 8px 30px rgba(15,118,110,.055); }
+.prospec-site.style-loja-vibrante .service-card:hover { border-color:var(--brand-accent); }
+@keyframes pm-content-enter { from { opacity:0; transform:translateY(18px); } to { opacity:1; transform:translateY(0); } }
+@keyframes pm-hero-settle { from { transform:scale(1.07); } to { transform:scale(1.025); } }
+@keyframes pm-float { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-9px); } }
+@keyframes pm-shimmer { 0%,70%,100% { left:-50%; } 35% { left:125%; } }
+@media (prefers-reduced-motion: reduce) {
+  .prospec-site *, .prospec-site *::before, .prospec-site *::after { animation:none !important; scroll-behavior:auto !important; transition:none !important; }
+}
