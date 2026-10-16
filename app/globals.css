@@ -423,3 +423,33 @@
   .prospecmap-dashboard > header h1 { font-size: 1.75rem; line-height: 1.18; }
   .prospecmap-dashboard section form { padding: 16px !important; }
 }
+
+
+/* Contrast/accessibility fix: readable text on dark dashboard and light search panel */
+.prospecmap-dashboard section form,
+.prospecmap-dashboard section form *:not(button):not(button *) {
+  color: #1a252c;
+}
+.prospecmap-dashboard section form .text-slate-400,
+.prospecmap-dashboard section form .text-slate-500,
+.prospecmap-dashboard section form .text-slate-600,
+.prospecmap-dashboard section form p {
+  color: #52636d !important;
+}
+.prospecmap-dashboard section form button,
+.prospecmap-dashboard section form button * {
+  color: #ffffff !important;
+}
+.prospecmap-dashboard .bg-white:not(form .bg-white) .text-slate-300,
+.prospecmap-dashboard .bg-white:not(form .bg-white) .text-slate-400,
+.prospecmap-dashboard .bg-white:not(form .bg-white) .text-slate-500 {
+  color: #aebdc6 !important;
+}
+.prospecmap-dashboard .bg-white:not(form .bg-white) .text-slate-900,
+.prospecmap-dashboard .bg-white:not(form .bg-white) .text-slate-800,
+.prospecmap-dashboard .bg-white:not(form .bg-white) .text-slate-700,
+.prospecmap-dashboard .bg-white:not(form .bg-white) .text-slate-600 {
+  color: #f3f7f9 !important;
+}
+.prospecmap-dashboard input::placeholder,
+.prospecmap-dashboard textarea::placeholder { opacity: 1; }
