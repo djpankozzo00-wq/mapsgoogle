@@ -238,3 +238,85 @@
 .prospecmap-dashboard .hover\:bg-slate-100:hover,
 .prospecmap-dashboard .hover\:bg-emerald-100:hover { background:#243642 !important; }
 .prospecmap-dashboard .shadow-sm { box-shadow:0 8px 24px rgba(0,0,0,.18) !important; }
+
+
+/* ProspecMap professional finish */
+.prospecmap-dashboard {
+  --pm-bg: #0b1319;
+  --pm-panel: #18252e;
+  --pm-panel-raised: #1d2d37;
+  --pm-line: #2a3a47;
+  --pm-gold: #d4af37;
+  background:
+    radial-gradient(ellipse at 50% -15%, rgba(45,106,79,.18), transparent 48%),
+    var(--pm-bg) !important;
+  letter-spacing: -0.01em;
+}
+.prospecmap-dashboard > header {
+  border-bottom: 1px solid var(--pm-line) !important;
+  box-shadow: 0 10px 30px rgba(0,0,0,.12);
+}
+.prospecmap-dashboard h1,
+.prospecmap-dashboard h2,
+.prospecmap-dashboard h3 {
+  letter-spacing: -0.035em;
+}
+.prospecmap-dashboard section .bg-white,
+.prospecmap-dashboard .rounded-2xl,
+.prospecmap-dashboard .rounded-3xl {
+  border-color: var(--pm-line);
+}
+.prospecmap-dashboard .bg-white {
+  box-shadow: 0 10px 28px rgba(0,0,0,.13);
+}
+.prospecmap-dashboard button,
+.prospecmap-dashboard a {
+  transition: background-color .18s ease, border-color .18s ease, color .18s ease, transform .18s ease, box-shadow .18s ease;
+}
+.prospecmap-dashboard button:active {
+  transform: translateY(1px);
+}
+.prospecmap-dashboard button:not(:disabled):hover {
+  border-color: rgba(212,175,55,.65);
+}
+.prospecmap-dashboard button.bg-white {
+  box-shadow: 0 5px 16px rgba(212,175,55,.12);
+}
+.prospecmap-dashboard input,
+.prospecmap-dashboard select,
+.prospecmap-dashboard textarea {
+  min-height: 42px;
+  border-radius: 12px;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,.12);
+}
+.prospecmap-dashboard input:focus,
+.prospecmap-dashboard select:focus,
+.prospecmap-dashboard textarea:focus {
+  outline: 2px solid rgba(212,175,55,.42);
+  outline-offset: 1px;
+}
+.prospecmap-dashboard table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.prospecmap-dashboard th {
+  color: #94a3b8;
+  font-size: .7rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.prospecmap-dashboard ::selection {
+  background: rgba(212,175,55,.32);
+  color: #fff;
+}
+@media (max-width: 640px) {
+  .prospecmap-dashboard > header {
+    box-shadow: 0 6px 20px rgba(0,0,0,.18);
+  }
+  .prospecmap-dashboard input,
+  .prospecmap-dashboard select,
+  .prospecmap-dashboard textarea {
+    font-size: 16px;
+  }
+}
