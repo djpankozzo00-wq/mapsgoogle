@@ -515,3 +515,43 @@
 .prospecmap-dashboard section .bg-slate-50 span {
   color: #dce6eb !important;
 }
+
+
+/* Final readability fix: company search selectors and deleted history */
+.prospecmap-dashboard section form label,
+.prospecmap-dashboard section form label span {
+  color: #1a252c !important;
+}
+.prospecmap-dashboard section form select,
+.prospecmap-dashboard section form select:focus {
+  background-color: #f4f7f9 !important;
+  color: #17252d !important;
+  border: 1px solid #aebdc6 !important;
+  opacity: 1 !important;
+}
+.prospecmap-dashboard section form select option,
+.prospecmap-dashboard section form select optgroup {
+  background-color: #f4f7f9 !important;
+  color: #17252d !important;
+}
+.prospecmap-dashboard section form select:disabled {
+  background-color: #dce4e9 !important;
+  color: #43535d !important;
+  -webkit-text-fill-color: #43535d !important;
+}
+.prospecmap-dashboard section ul li {
+  background-color: #172832 !important;
+  color: #f1f5f7 !important;
+  border-color: #40545f !important;
+}
+.prospecmap-dashboard section ul li p {
+  color: #e5edf1 !important;
+}
+.prospecmap-dashboard section ul li p.font-bold {
+  color: #ffffff !important;
+}
+.prospecmap-dashboard section ul li button {
+  background-color: #2a414b !important;
+  color: #ffe08a !important;
+  border-color: #667d88 !important;
+}
