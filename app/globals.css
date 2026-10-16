@@ -453,3 +453,30 @@
 }
 .prospecmap-dashboard input::placeholder,
 .prospecmap-dashboard textarea::placeholder { opacity: 1; }
+
+
+/* Stronger contrast pass for all dashboard labels, badges, and secondary copy */
+.prospecmap-dashboard .text-\[\#9a7b3f\] { color: #f0cf70 !important; }
+.prospecmap-dashboard .text-\[\#347d79\],
+.prospecmap-dashboard .text-\[\#176b57\] { color: #e0c36d !important; }
+.prospecmap-dashboard .bg-amber-50,
+.prospecmap-dashboard .bg-blue-50,
+.prospecmap-dashboard .bg-slate-100 { background-color: #26343d !important; }
+.prospecmap-dashboard .bg-amber-50 *,
+.prospecmap-dashboard .bg-blue-50 *,
+.prospecmap-dashboard .bg-slate-100 * { color: #f3d987 !important; }
+.prospecmap-dashboard .bg-emerald-50 { background-color: #183d30 !important; }
+.prospecmap-dashboard .bg-emerald-50 * { color: #a7f3c5 !important; }
+.prospecmap-dashboard .bg-red-50 * { color: #b42318 !important; }
+.prospecmap-dashboard section form .text-white,
+.prospecmap-dashboard section form .text-slate-950,
+.prospecmap-dashboard section form .text-slate-900,
+.prospecmap-dashboard section form .text-slate-800,
+.prospecmap-dashboard section form .text-slate-700,
+.prospecmap-dashboard section form .text-slate-600,
+.prospecmap-dashboard section form .text-\[\#9a7b3f\],
+.prospecmap-dashboard section form .text-\[\#347d79\] { color: #1a252c !important; }
+.prospecmap-dashboard section form button,
+.prospecmap-dashboard section form button * { color: #ffffff !important; }
+.prospecmap-dashboard .text-slate-500,
+.prospecmap-dashboard .text-slate-400 { color: #b8c5cc !important; }
