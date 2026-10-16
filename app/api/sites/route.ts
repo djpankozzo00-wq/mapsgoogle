@@ -24,7 +24,7 @@ async function generateDesign(lead: Lead) {
   if (!apiKey) return { design: fallback, generator: 'personalizado', generationMessage: 'A variável V0_API_KEY não está disponível nesta execução da aplicação.' }
   try {
     // A antiga Models API /v1/chat/completions retorna 404. Usar a Platform API atual.
-    const response = await fetch('https://v0.app/api/v2/chats', {
+    const response = await fetch('https://v0.app/api/v2/chats/async', {
       method: 'POST',
       headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -48,12 +48,42 @@ async function generateDesign(lead: Lead) {
       const safeMessage = providerMessage ? `Detalhe informado pela API: ${providerMessage.slice(0, 240)}` : providerBody ? `Resposta da API: ${providerBody.slice(0, 240)}` : 'A API não informou o motivo específico.'
       return { design: fallback, generator: 'personalizado', generationMessage: `A API v0 Platform respondeu com erro HTTP ${response.status}. ${safeMessage} Confira a chave e o acesso à API Platform.` }
     }
-    const result = await response.json()
-    const lastMessage = Array.isArray(result?.messages) ? result.messages.slice(-1)[0] : null
-    const content = typeof result?.text === 'string' ? result.text : typeof result?.content === 'string' ? result.content : typeof lastMessage?.content === 'string' ? lastMessage.content : Array.isArray(lastMessage?.parts) ? lastMessage.parts.map((part: any) => typeof part?.text === 'string' ? part.text : '').join('') : ''
+    const created = await response.json()
+    const chatId = typeof created?.chatId === 'string' ? created.chatId : typeof created?.chat?.id === 'string' ? created.chat.id : typeof created?.id === 'string' ? created.id : ''
+    const messageId = typeof created?.messageId === 'string' ? created.messageId : typeof created?.assistantMessageId === 'string' ? created.assistantMessageId : ''
+    if (!chatId || !messageId) {
+      console.error('[v0-generation] Resposta de criação sem IDs de chat/mensagem', JSON.stringify({ keys: Object.keys(created || {}) }))
+      return { design: fallback, generator: 'personalizado', generationMessage: 'A API v0 aceitou a solicitação, mas não retornou os identificadores necessários para acompanhar a geração. Confira a resposta da API e tente novamente.' }
+    }
+    let content = ''
+    let finalStatus = ''
+    // A API v2 pode enfileirar a geração; consultar a mensagem até ela terminar.
+    for (let attempt = 0; attempt < 25; attempt++) {
+      if (attempt > 0) await new Promise(resolve => setTimeout(resolve, 2000))
+      const poll = await fetch(`https://v0.app/api/v2/chats/${encodeURIComponent(chatId)}/messages/${encodeURIComponent(messageId)}`, {
+        headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+        cache: 'no-store',
+        signal: AbortSignal.timeout(10000)
+      })
+      const raw = await poll.text().catch(() => '')
+      if (!poll.ok) {
+        console.error('[v0-generation] Consulta de mensagem falhou', poll.status, raw.slice(0, 250))
+        if (poll.status === 401 || poll.status === 403 || poll.status === 404) {
+          return { design: fallback, generator: 'personalizado', generationMessage: `A API v0 aceitou a solicitação, mas a consulta da geração falhou com HTTP ${poll.status}. ${raw.slice(0, 180)}` }
+        }
+        continue
+      }
+      let msg: any
+      try { msg = JSON.parse(raw) } catch { continue }
+      const candidate = typeof msg?.content === 'string' ? msg.content : typeof msg?.text === 'string' ? msg.text : typeof msg?.message?.content === 'string' ? msg.message.content : Array.isArray(msg?.parts) ? msg.parts.map((part: any) => typeof part?.text === 'string' ? part.text : '').join('') : ''
+      finalStatus = String(msg?.finishReason || msg?.status || msg?.message?.finishReason || '')
+      if (candidate.trim()) content = candidate
+      if (content && (msg?.finishReason != null || msg?.message?.finishReason != null || /completed|complete|finished|stop|length|tool-calls/i.test(finalStatus))) break
+      if (/error|failed|cancelled|canceled/i.test(finalStatus)) break
+    }
     if (!content) {
-      console.error('[v0-generation] Platform API respondeu sem texto', JSON.stringify({ id: result?.id, status: result?.latestVersion?.status }))
-      return { design: fallback, generator: 'personalizado', generationMessage: 'A API v0 respondeu, mas não retornou texto utilizável. Tente novamente e confira o status da geração na API.' }
+      console.error('[v0-generation] Mensagem v0 sem texto após consulta', JSON.stringify({ chatId, messageId, finalStatus }))
+      return { design: fallback, generator: 'personalizado', generationMessage: finalStatus ? `A geração v0 terminou sem texto utilizável (status: ${finalStatus}).` : 'A API v0 criou a solicitação, mas não disponibilizou o texto dentro do tempo de espera. Tente novamente mais tarde.' }
     }
     const cleaned = content.replace(/^\`\`\`(?:json)?\s*/i, '').replace(/\s*\`\`\`$/, '').trim()
     const jsonStart = cleaned.indexOf('{')
