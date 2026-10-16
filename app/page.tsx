@@ -115,7 +115,18 @@ export default function Page() {
   const openNew = () => { setEditingLead(null); setIsFormOpen(true) }
   const openEdit = (lead: Lead) => { setEditingLead(lead); setIsFormOpen(true) }
   const saveLead = (event: FormEvent<HTMLFormElement>) => { event.preventDefault(); const form = new FormData(event.currentTarget); const data = { name: String(form.get('name') || '').trim(), niche: String(form.get('niche') || '').trim(), city: String(form.get('city') || '').trim(), state: String(form.get('state') || '').trim().toUpperCase(), country: String(form.get('country') || 'Brasil').trim(), status: String(form.get('status') || 'A contactar') as LeadStatus, whatsapp: normalizePhone(String(form.get('whatsapp') || '')), notes: String(form.get('notes') || '').trim() }; setLeads((current) => editingLead ? current.map((lead) => lead.id === editingLead.id ? { ...editingLead, ...data } : lead) : [{ id: crypto.randomUUID(), ...data }, ...current]); setIsFormOpen(false) }
-  const removeLead = (id: string) => { if (window.confirm('Excluir este lead?')) setLeads((current) => current.filter((lead) => lead.id !== id)) }
+  const leadKey = (lead: Pick<Lead, 'name' | 'city' | 'state'>) => [lead.name, lead.city, lead.state].map((value) => value.normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').trim().toLowerCase()).join('|')
+  const removeLead = (id: string) => {
+    const lead = leads.find((item) => item.id === id)
+    if (!lead || !window.confirm('Excluir este lead? Ele também será marcado para não aparecer novamente nas próximas buscas.')) return
+    try {
+      const saved = JSON.parse(window.localStorage.getItem('prospecmap-excluded-leads') || '[]') as string[]
+      const excluded = new Set(saved)
+      excluded.add(leadKey(lead))
+      window.localStorage.setItem('prospecmap-excluded-leads', JSON.stringify([...excluded]))
+    } catch {}
+    setLeads((current) => current.filter((item) => item.id !== id))
+  }
   const clearFilters = () => { setSearch(''); setNicheFilter('Todos'); setStatusFilter('Todos') }
   const searchGoogleMaps = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -152,17 +163,20 @@ export default function Page() {
           place.placeId ? `Google Maps ID: ${place.placeId}` : '',
         ].filter(Boolean).join(' · '),
       }))
-      const existingKeys = new Set(leads.map((lead) => `${lead.name.toLowerCase()}|${lead.city.toLowerCase()}|${lead.state.toLowerCase()}`))
+      const existingKeys = new Set(leads.map(leadKey))
+      let excludedKeys: string[] = []
+      try { excludedKeys = JSON.parse(window.localStorage.getItem('prospecmap-excluded-leads') || '[]') as string[] } catch {}
+      const excluded = new Set(excludedKeys)
       const uniqueImported = imported.filter((lead, index) => {
-        const key = `${lead.name.toLowerCase()}|${lead.city.toLowerCase()}|${lead.state.toLowerCase()}`
-        if (existingKeys.has(key)) return false
+        const key = leadKey(lead)
+        if (existingKeys.has(key) || excluded.has(key)) return false
         existingKeys.add(key)
-        return imported.findIndex((item) => `${item.name.toLowerCase()}|${item.city.toLowerCase()}|${item.state.toLowerCase()}` === key) === index
+        return imported.findIndex((item) => leadKey(item) === key) === index
       })
       setLeads((current) => [...uniqueImported, ...current])
       setMapsMessage(uniqueImported.length
-        ? `${uniqueImported.length} empresa(s) importada(s) para sua carteira.${imported.length > uniqueImported.length ? ` ${imported.length - uniqueImported.length} duplicada(s) ignorada(s).` : ''}`
-        : 'A pesquisa não trouxe empresas novas. Os resultados encontrados já estão na sua carteira.')
+        ? `${uniqueImported.length} empresa(s) nova(s) importada(s) para sua carteira.${imported.length > uniqueImported.length ? ` ${imported.length - uniqueImported.length} repetida(s) ou já excluída(s) ignorada(s).` : ''}`
+        : `Não há mais empresas novas disponíveis para “${mapsNiche.trim()}” em ${mapsCity.trim()}, ${mapsState.trim().toUpperCase()} nos resultados encontrados. As empresas já cadastradas ou excluídas foram ignoradas.`)
     } catch (error) {
       setMapsError(error instanceof Error ? error.message : 'Erro inesperado na pesquisa.')
     } finally {
