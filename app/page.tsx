@@ -37,6 +37,7 @@ const allBusinessNiches = [...new Set(businessNiches.flatMap((group) => group.it
 export default function Page() {
   const [leads, setLeads] = useState<Lead[]>([])
   const [deletedCompanyHistory, setDeletedCompanyHistory] = useState<Array<DeletedCompany | string>>([])
+  const [historyLoaded, setHistoryLoaded] = useState(false)
   const [search, setSearch] = useState('')
   const [nicheFilter, setNicheFilter] = useState('Todos')
   const [statusFilter, setStatusFilter] = useState<'Todos' | LeadStatus>('Todos')
@@ -58,8 +59,8 @@ export default function Page() {
   const [siteBusy, setSiteBusy] = useState<string | null>(null)
 
   useEffect(() => { const saved = window.localStorage.getItem('prospecmap-leads'); setLeads(saved ? JSON.parse(saved) : exampleLeads); setIsLoaded(true) }, [])
-  useEffect(() => { try { const saved = window.localStorage.getItem('prospecmap-deleted-company-history'); setDeletedCompanyHistory(saved ? JSON.parse(saved) : []) } catch { setDeletedCompanyHistory([]) } }, [])
-  useEffect(() => { if (isLoaded) window.localStorage.setItem('prospecmap-deleted-company-history', JSON.stringify(deletedCompanyHistory)) }, [deletedCompanyHistory, isLoaded])
+  useEffect(() => { try { const saved = window.localStorage.getItem('prospecmap-deleted-company-history'); setDeletedCompanyHistory(saved ? JSON.parse(saved) : []) } catch { setDeletedCompanyHistory([]) } finally { setHistoryLoaded(true) } }, [])
+  useEffect(() => { if (historyLoaded) window.localStorage.setItem('prospecmap-deleted-company-history', JSON.stringify(deletedCompanyHistory)) }, [deletedCompanyHistory, historyLoaded])
   useEffect(() => { if (isLoaded) window.localStorage.setItem('prospecmap-leads', JSON.stringify(leads)) }, [leads, isLoaded])
   useEffect(() => {
     if (!mapsState) { setMapsCities([]); setMapsCity(''); return }
@@ -171,7 +172,7 @@ export default function Page() {
       excluded.add(leadKey(lead))
       window.localStorage.setItem('prospecmap-excluded-leads', JSON.stringify([...excluded]))
     } catch {}
-    setDeletedCompanyHistory((current) => [lead.name, ...current])
+    setDeletedCompanyHistory((current) => [{ name: lead.name, city: lead.city || 'Não informado', state: lead.state || '', country: lead.country || 'Não informado', niche: lead.niche || 'Não informado', cep: lead.notes.match(/\b\d{5}-?\d{3}\b/)?.[0] || 'Não informado', mapsUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${lead.name} ${lead.city} ${lead.state}`)}` }, ...current])
     setLeads((current) => current.filter((item) => item.id !== id))
   }
   const clearFilters = () => { setSearch(''); setNicheFilter('Todos'); setStatusFilter('Todos') }
