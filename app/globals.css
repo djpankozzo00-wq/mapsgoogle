@@ -480,3 +480,38 @@
 .prospecmap-dashboard section form button * { color: #ffffff !important; }
 .prospecmap-dashboard .text-slate-500,
 .prospecmap-dashboard .text-slate-400 { color: #b8c5cc !important; }
+
+
+/* Readable deletion history on dark dashboard */
+.prospecmap-dashboard section:has(> div > div > h2) ul li,
+.prospecmap-dashboard section ul li {
+  background: #172832 !important;
+  border-color: #344852 !important;
+  color: #f1f5f7 !important;
+}
+.prospecmap-dashboard section ul li p,
+.prospecmap-dashboard section ul li .font-medium,
+.prospecmap-dashboard section ul li .text-slate-700,
+.prospecmap-dashboard section ul li .text-slate-600 {
+  color: #dce6eb !important;
+}
+.prospecmap-dashboard section ul li .text-slate-900,
+.prospecmap-dashboard section ul li .font-bold {
+  color: #ffffff !important;
+}
+.prospecmap-dashboard section ul li button {
+  background: #233a44 !important;
+  border-color: #536975 !important;
+  color: #f0d27b !important;
+}
+.prospecmap-dashboard section ul li button:hover {
+  background: #2d4651 !important;
+}
+.prospecmap-dashboard section .bg-slate-50 {
+  background-color: #172832 !important;
+  border-color: #344852 !important;
+}
+.prospecmap-dashboard section .bg-slate-50 p,
+.prospecmap-dashboard section .bg-slate-50 span {
+  color: #dce6eb !important;
+}
