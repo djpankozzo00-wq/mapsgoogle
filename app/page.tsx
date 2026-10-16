@@ -183,47 +183,38 @@ export default function Page() {
     const normalize = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLocaleLowerCase('pt-BR')
     const used = new Set(usedSearchCombos)
     const niches = [...allBusinessNiches]
-    const shuffledStates = [...brazilStates].sort(() => Math.random() - 0.5)
     setCitiesLoading(true)
     setMapsError('')
     setMapsMessage('')
     try {
-      // Load states until we find a city/niche combination that has not been used.
-      const stateCityLists = await Promise.all(shuffledStates.map(async (state) => {
-        try {
-          const response = await fetch('https://servicodados.ibge.gov.br/api/v1/localidades/estados/' + state.uf + '/municipios?orderBy=nome')
-          if (!response.ok) return { state, cities: [] as Array<{ nome: string }> }
-          return { state, cities: await response.json() as Array<{ nome: string }> }
-        } catch {
-          return { state, cities: [] as Array<{ nome: string }> }
-        }
-      }))
-      const candidates: Array<{ state: typeof brazilStates[number]; city: string; niche: string; key: string }> = []
-      for (const entry of stateCityLists) {
-        const shuffledCities = [...entry.cities].sort(() => Math.random() - 0.5)
-        for (const cityItem of shuffledCities) {
-          for (const niche of [...niches].sort(() => Math.random() - 0.5)) {
-            const key = [niche, cityItem.nome, entry.state.uf].map(normalize).join('|')
-            if (!used.has(key)) candidates.push({ state: entry.state, city: cityItem.nome, niche, key })
-          }
-        }
+      // Reaproveita a lista já carregada; se não houver, consulta apenas um estado.
+      let state = brazilStates.find((item) => item.uf === mapsState)
+      let cityNames = mapsCities
+      if (!state) state = brazilStates[Math.floor(Math.random() * brazilStates.length)]
+      if (cityNames.length === 0 || !mapsState || state.uf !== mapsState) {
+        const response = await fetch('https://servicodados.ibge.gov.br/api/v1/localidades/estados/' + state.uf + '/municipios?orderBy=nome')
+        if (!response.ok) throw new Error('Não foi possível carregar as cidades do IBGE.')
+        const data = await response.json() as Array<{ nome: string }>
+        cityNames = data.map((city) => city.nome)
       }
-      if (candidates.length === 0) {
-        setMapsError(stateCityLists.every((entry) => entry.cities.length === 0)
-          ? 'Não foi possível carregar as cidades do IBGE. Tente novamente.'
-          : 'Todas as combinações disponíveis já foram usadas neste navegador.')
+      if (cityNames.length === 0) throw new Error('Não foram encontradas cidades para esse estado.')
+      // Testa combinações aleatórias sem montar a enorme lista de todos os municípios do Brasil.
+      for (let attempt = 0; attempt < 250; attempt++) {
+        const niche = niches[Math.floor(Math.random() * niches.length)]
+        const city = cityNames[Math.floor(Math.random() * cityNames.length)]
+        const key = [niche, city, state.uf].map(normalize).join('|')
+        if (used.has(key)) continue
+        setMapsState(state.uf)
+        setMapsCities(cityNames)
+        setMapsNiche(niche)
+        setMapsCity(city)
+        setUsedSearchCombos((current) => current.includes(key) ? current : [...current, key])
+        setMapsMessage('Nicho, cidade e estado escolhidos.')
         return
       }
-      const choice = candidates[Math.floor(Math.random() * candidates.length)]
-      const chosenStateCities = stateCityLists.find((entry) => entry.state.uf === choice.state.uf)?.cities ?? []
-      setMapsState(choice.state.uf)
-      setMapsCities(chosenStateCities.map((item) => item.nome))
-      setMapsNiche(choice.niche)
-      setMapsCity(choice.city)
-      setUsedSearchCombos((current) => current.includes(choice.key) ? current : [...current, choice.key])
-      setMapsMessage('Nicho, cidade e estado escolhidos aleatoriamente.')
-    } catch {
-      setMapsError('Não foi possível gerar a combinação agora. Tente novamente.')
+      setMapsError('Não encontrei uma combinação nova nesse estado. Tente gerar novamente.')
+    } catch (error) {
+      setMapsError(error instanceof Error ? error.message : 'Não foi possível gerar a combinação agora. Tente novamente.')
     } finally {
       setCitiesLoading(false)
     }
