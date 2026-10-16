@@ -343,12 +343,12 @@ function LeadCard({ lead, onEdit, onDelete, onWhatsappSend, onStatusChange, onWh
 Cada plaquinha custa R$ 30. Hoje, o conjunto com as 5 está em promoção: de R$ 150 por R$ 100, sem mensalidade.
 
 Você prefere receber uma prévia por vídeo de 14 segundos, apenas mostrando as plaquinhas, ou por link personalizado? Se escolher o link, qual modelo quer ver: Pix, Avaliação no Google Maps, Wi-Fi, Instagram ou WhatsApp?`,
-`Oi, pessoal da ${lead.name}! 😊 Tenho plaquinhas virtuais para facilitar o acesso dos clientes ao Pix, Google, Wi-Fi, Instagram e WhatsApp.
+`Oi, pessoal da ${lead.name}! 😊 Tenho plaquinhas virtuais para facilitar o acesso dos clientes ao Pix, Avaliação no Google Maps, Wi-Fi, Instagram e WhatsApp.
 
 Cada plaquinha custa R$ 30. Hoje, o conjunto com as 5 está em promoção: de R$ 150 por R$ 100, sem mensalidade. Eu mesmo configuro antes de enviar.
 
 Você prefere receber uma prévia por vídeo de 14 segundos, apenas mostrando as plaquinhas, ou por link personalizado? Se escolher o link, qual modelo quer ver: Pix, Avaliação no Google Maps, Wi-Fi, Instagram ou WhatsApp?`,
-`Olá, tudo bem? Sou o Fabrício! Faço plaquinhas virtuais personalizadas para sua empresa, com Pix, Google, Wi-Fi, Instagram ou WhatsApp. Eu configuro tudo antes de entregar.
+`Olá, tudo bem? Sou o Fabrício! Faço plaquinhas virtuais personalizadas para sua empresa, com Pix, Avaliação no Google Maps, Wi-Fi, Instagram ou WhatsApp. Eu configuro tudo antes de entregar.
 
 Cada plaquinha custa R$ 30. Hoje, o conjunto com as 5 está em promoção: de R$ 150 por R$ 100, sem mensalidade.
 
@@ -363,7 +363,7 @@ Você prefere receber uma prévia por vídeo de 14 segundos, apenas mostrando as
 Cada plaquinha custa R$ 30. Hoje, o conjunto com as 5 está em promoção: de R$ 150 por R$ 100, sem mensalidade.
 
 Você prefere receber uma prévia por vídeo de 14 segundos, apenas mostrando as plaquinhas, ou por link personalizado? Se escolher o link, qual modelo quer ver: Pix, Avaliação no Google Maps, Wi-Fi, Instagram ou WhatsApp?`,
-`Oi! Tudo bem? 😊 Estou apresentando plaquinhas virtuais personalizadas para empresas, com Pix, Google, Wi-Fi, Instagram e WhatsApp. Eu configuro tudo antes de entregar.
+`Oi! Tudo bem? 😊 Estou apresentando plaquinhas virtuais personalizadas para empresas, com Pix, Avaliação no Google Maps, Wi-Fi, Instagram e WhatsApp. Eu configuro tudo antes de entregar.
 
 Cada plaquinha custa R$ 30. Hoje, o conjunto com as 5 está em promoção: de R$ 150 por R$ 100, sem mensalidade.
 
