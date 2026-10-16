@@ -1,7 +1,7 @@
 'use client'
 
 import { FormEvent, useEffect, useMemo, useState } from 'react'
-import SitePhotoManager, { SitePhoto } from '@/components/site-photo-manager'
+import SitePhotoManager, { type SitePhoto } from '@/components/site-photo-manager'
 import { ArrowLeft, ArrowRight, Building2, Check, CheckCircle2, ChevronDown, CirclePlus, ExternalLink, Filter, MapPin, MessageCircle, Pencil, Search, ShieldCheck, Sparkles, StickyNote, Trash2, X, MapPinned, LoaderCircle } from 'lucide-react'
 
 type LeadStatus = 'A contactar' | 'Em negociação' | 'Fechado' | 'Rejeitado'
