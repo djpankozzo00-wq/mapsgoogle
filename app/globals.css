@@ -555,3 +555,32 @@
   color: #ffe08a !important;
   border-color: #667d88 !important;
 }
+
+
+/* User-requested final change: force white lettering in search fields and deleted-company history */
+.prospecmap-dashboard section form,
+.prospecmap-dashboard section form label,
+.prospecmap-dashboard section form label span,
+.prospecmap-dashboard section form h2,
+.prospecmap-dashboard section form p,
+.prospecmap-dashboard section form input,
+.prospecmap-dashboard section form select,
+.prospecmap-dashboard section form textarea,
+.prospecmap-dashboard section form select option,
+.prospecmap-dashboard section form select optgroup {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+.prospecmap-dashboard section form input::placeholder,
+.prospecmap-dashboard section form textarea::placeholder {
+  color: #d1dbe0 !important;
+  -webkit-text-fill-color: #d1dbe0 !important;
+}
+.prospecmap-dashboard section ul li,
+.prospecmap-dashboard section ul li p,
+.prospecmap-dashboard section ul li span,
+.prospecmap-dashboard section ul li div,
+.prospecmap-dashboard section ul li .font-medium,
+.prospecmap-dashboard section ul li .font-bold {
+  color: #ffffff !important;
+}
