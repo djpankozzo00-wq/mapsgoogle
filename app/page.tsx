@@ -231,19 +231,33 @@ export default function Page() {
   const clearFilters = () => { setSearch(''); setNicheFilter('Todos'); setStatusFilter('Todos') }
   const searchGoogleMaps = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    if (!mapsNiche.trim() || !mapsCity.trim() || !mapsState.trim()) {
-      setMapsError('Preencha o nicho, a cidade e o estado.')
-      setMapsMessage('')
-      return
-    }
     setMapsLoading(true)
     setMapsError('')
     setMapsMessage('')
+    let searchNiche = mapsNiche.trim()
+    let searchCity = mapsCity.trim()
+    let searchState = mapsState.trim()
     try {
+      // If the user skips the generator, choose all three values automatically.
+      if (!searchNiche || !searchCity || !searchState) {
+        const randomState = [...brazilStates].sort(() => Math.random() - 0.5)[0]
+        const cityResponse = await fetch('https://servicodados.ibge.gov.br/api/v1/localidades/estados/' + randomState.uf + '/municipios?orderBy=nome')
+        if (!cityResponse.ok) throw new Error('Não foi possível carregar cidades para a seleção automática.')
+        const availableCities = await cityResponse.json() as Array<{ nome: string }>
+        if (!availableCities.length || !allBusinessNiches.length) throw new Error('Não há cidades ou nichos disponíveis para gerar a busca.')
+        searchState = randomState.uf
+        searchCity = availableCities[Math.floor(Math.random() * availableCities.length)].nome
+        searchNiche = allBusinessNiches[Math.floor(Math.random() * allBusinessNiches.length)]
+        setMapsState(searchState)
+        setMapsCities(availableCities.map((item) => item.nome))
+        setMapsCity(searchCity)
+        setMapsNiche(searchNiche)
+        setMapsMessage('Nicho, cidade e estado foram escolhidos automaticamente para esta busca.')
+      }
       const response = await fetch('/api/hasdata/search', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ niche: mapsNiche.trim(), city: mapsCity.trim(), state: mapsState.trim() }),
+        body: JSON.stringify({ niche: searchNiche, city: searchCity, state: searchState }),
       })
       const payload = await response.json()
       if (!response.ok) throw new Error(payload.error || 'Não foi possível pesquisar no Google Maps.')
@@ -251,9 +265,9 @@ export default function Page() {
       const imported: Lead[] = results.filter((place: { name?: string; phone?: string; website?: string }) => Boolean(place.name?.trim()) && Boolean(place.phone?.trim()) && !place.website?.trim()).map((place: { name: string; phone?: string; address?: string; website?: string; type?: string; rating?: number | string; reviews?: number | string; placeId?: string }) => ({
         id: crypto.randomUUID(),
         name: place.name.trim(),
-        niche: place.type || mapsNiche.trim(),
-        city: mapsCity.trim(),
-        state: mapsState.trim().toUpperCase(),
+        niche: place.type || searchNiche,
+        city: searchCity,
+        state: searchState.toUpperCase(),
         country: 'Brasil',
         status: 'A contactar' as LeadStatus,
         whatsapp: normalizePhone(place.phone || ''),
@@ -277,7 +291,7 @@ export default function Page() {
       setLeads((current) => [...uniqueImported, ...current])
       setMapsMessage(uniqueImported.length
         ? `${uniqueImported.length} empresa(s) nova(s) importada(s) para sua carteira.${imported.length > uniqueImported.length ? ` ${imported.length - uniqueImported.length} repetida(s) ou já excluída(s) ignorada(s).` : ''}`
-        : `Não há mais empresas novas disponíveis para “${mapsNiche.trim()}” em ${mapsCity.trim()}, ${mapsState.trim().toUpperCase()} nos resultados encontrados. As empresas já cadastradas ou excluídas foram ignoradas.`)
+        : `Não há mais empresas novas disponíveis para “${searchNiche}” em ${searchCity}, ${searchState.toUpperCase()} nos resultados encontrados. As empresas já cadastradas ou excluídas foram ignoradas.`)
     } catch (error) {
       setMapsError(error instanceof Error ? error.message : 'Erro inesperado na pesquisa.')
     } finally {
