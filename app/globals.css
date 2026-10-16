@@ -320,3 +320,106 @@
     font-size: 16px;
   }
 }
+
+
+/* Theme alignment: ProspecMap Modern Dark/Light Mobile */
+.prospecmap-dashboard {
+  --pm-topbar: #091218;
+  --pm-header: #0d1b22;
+  --pm-hero: #13252a;
+  --pm-metric: #13222a;
+  --pm-light: #ebf0f2;
+  --pm-input: #e1e8ed;
+  --pm-gold: #bfa153;
+  --pm-green: #236b48;
+  --pm-green-bright: #288053;
+  --pm-muted: #8e9ea9;
+  background: var(--pm-topbar) !important;
+  color: #fff !important;
+}
+.prospecmap-dashboard > header {
+  background: var(--pm-header) !important;
+  border-color: #20343d !important;
+}
+.prospecmap-dashboard > header .bg-\[\#c6a96b\] {
+  background: var(--pm-gold) !important;
+}
+.prospecmap-dashboard > header button {
+  background: transparent !important;
+  border: 1px solid var(--pm-gold) !important;
+  border-radius: 20px !important;
+  color: var(--pm-gold) !important;
+  box-shadow: none !important;
+}
+.prospecmap-dashboard > header button:hover {
+  background: rgba(191,161,83,.12) !important;
+}
+.prospecmap-dashboard > header > div > div:last-child {
+  border-radius: 12px;
+}
+.prospecmap-dashboard .bg-white {
+  background-color: var(--pm-metric) !important;
+  border-color: #263b43 !important;
+  box-shadow: 0 8px 22px rgba(0,0,0,.14);
+}
+.prospecmap-dashboard section form {
+  background: var(--pm-light) !important;
+  color: #1a252c !important;
+  border-color: #d6e0e5 !important;
+  border-radius: 16px !important;
+  box-shadow: 0 12px 28px rgba(0,0,0,.12);
+}
+.prospecmap-dashboard section form h2,
+.prospecmap-dashboard section form label {
+  color: #1a252c !important;
+}
+.prospecmap-dashboard section form p {
+  color: #52636d !important;
+}
+.prospecmap-dashboard section form input,
+.prospecmap-dashboard section form select,
+.prospecmap-dashboard section form textarea {
+  background: var(--pm-input) !important;
+  color: #1a252c !important;
+  border-color: #c9d5dc !important;
+}
+.prospecmap-dashboard section form input::placeholder,
+.prospecmap-dashboard section form textarea::placeholder {
+  color: #61717a !important;
+}
+.prospecmap-dashboard section form button[type="submit"],
+.prospecmap-dashboard section form button.border-2 {
+  background: var(--pm-green) !important;
+  border-color: var(--pm-green) !important;
+  color: #fff !important;
+  border-radius: 20px !important;
+}
+.prospecmap-dashboard section form button[type="submit"]:hover,
+.prospecmap-dashboard section form button.border-2:hover {
+  background: var(--pm-green-bright) !important;
+}
+.prospecmap-dashboard .text-\[\#347d79\],
+.prospecmap-dashboard .text-\[\#176b57\],
+.prospecmap-dashboard .text-\[\#9a7b3f\] {
+  color: var(--pm-gold) !important;
+}
+.prospecmap-dashboard .border-\[\#176b57\] {
+  border-color: var(--pm-green) !important;
+}
+.prospecmap-dashboard .bg-cyan-50,
+.prospecmap-dashboard .bg-emerald-50 {
+  background: rgba(35,107,72,.12) !important;
+}
+.prospecmap-dashboard .text-slate-300,
+.prospecmap-dashboard .text-slate-400,
+.prospecmap-dashboard .text-slate-500 {
+  color: var(--pm-muted) !important;
+}
+.prospecmap-dashboard .bg-red-50 { background: #fff1f0 !important; }
+.prospecmap-dashboard .text-red-700 { color: #b42318 !important; }
+.prospecmap-dashboard .bg-emerald-50.text-emerald-700 { color: #236b48 !important; }
+@media (max-width: 640px) {
+  .prospecmap-dashboard > header .mx-auto { padding-top: 16px; padding-bottom: 22px; }
+  .prospecmap-dashboard > header h1 { font-size: 1.75rem; line-height: 1.18; }
+  .prospecmap-dashboard section form { padding: 16px !important; }
+}
