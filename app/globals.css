@@ -204,3 +204,37 @@
 @media (prefers-reduced-motion: reduce) {
   .prospec-site *, .prospec-site *::before, .prospec-site *::after { animation:none !important; scroll-behavior:auto !important; transition:none !important; }
 }
+
+
+/* ProspecMap dashboard theme: scoped so customer preview sites keep their own design */
+.prospecmap-dashboard { background:#0b1319 !important; color:#fff !important; }
+.prospecmap-dashboard > header { background:#111c24 !important; border-color:#2a3a47 !important; }
+.prospecmap-dashboard section { color:inherit; }
+.prospecmap-dashboard .bg-white { background-color:#18252e !important; }
+.prospecmap-dashboard .bg-\[\#f4f6f8\] { background-color:#0b1319 !important; }
+.prospecmap-dashboard .text-slate-950,
+.prospecmap-dashboard .text-slate-900,
+.prospecmap-dashboard .text-slate-800,
+.prospecmap-dashboard .text-slate-700,
+.prospecmap-dashboard .text-slate-600 { color:#fff !important; }
+.prospecmap-dashboard .text-slate-500,
+.prospecmap-dashboard .text-slate-400 { color:#94a3b8 !important; }
+.prospecmap-dashboard .border-slate-200,
+.prospecmap-dashboard .border-slate-300,
+.prospecmap-dashboard .border-slate-100,
+.prospecmap-dashboard .border-slate-200\/80 { border-color:#2a3a47 !important; }
+.prospecmap-dashboard input,
+.prospecmap-dashboard select,
+.prospecmap-dashboard textarea { background:#111c24 !important; color:#fff !important; border-color:#2a3a47 !important; }
+.prospecmap-dashboard input::placeholder,
+.prospecmap-dashboard textarea::placeholder { color:#94a3b8 !important; }
+.prospecmap-dashboard button.bg-white { background:#d4af37 !important; color:#0b1319 !important; }
+.prospecmap-dashboard .bg-emerald-50,
+.prospecmap-dashboard .bg-cyan-50 { background:#1b4332 !important; color:#fff !important; }
+.prospecmap-dashboard .text-\[\#347d79\],
+.prospecmap-dashboard .text-\[\#176b57\] { color:#d4af37 !important; }
+.prospecmap-dashboard .border-\[\#176b57\] { border-color:#d4af37 !important; }
+.prospecmap-dashboard .hover\:bg-slate-50:hover,
+.prospecmap-dashboard .hover\:bg-slate-100:hover,
+.prospecmap-dashboard .hover\:bg-emerald-100:hover { background:#243642 !important; }
+.prospecmap-dashboard .shadow-sm { box-shadow:0 8px 24px rgba(0,0,0,.18) !important; }
