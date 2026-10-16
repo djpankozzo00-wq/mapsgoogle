@@ -178,32 +178,41 @@ export default function Page() {
     setDeletedCompanyHistory((current) => [{ name: lead.name, city: lead.city || 'Não informado', state: lead.state || '', country: lead.country || 'Não informado', niche: lead.niche || 'Não informado', cep: lead.notes.match(/\b\d{5}-?\d{3}\b/)?.[0] || 'Não informado', mapsUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${lead.name} ${lead.city} ${lead.state}`)}` }, ...current])
     setLeads((current) => current.filter((item) => item.id !== id))
   }
-  const generateUniqueSearchCombo = () => {
+  const generateUniqueSearchCombo = async () => {
     const normalize = (value: string) => value.normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').trim().toLocaleLowerCase('pt-BR')
-    const niches = allBusinessNiches
-    const states = brazilStates
     const used = new Set(usedSearchCombos)
-    try {
-      const excluded = JSON.parse(window.localStorage.getItem('prospecmap-excluded-leads') || '[]') as string[]
-      void excluded
-    } catch {}
-    const combos: Array<{ niche: string; state: string; city: string }> = []
-    for (const niche of niches) for (const state of states) for (const city of mapsCities) {
-      const key = [niche, city, state.uf].map(normalize).join('|')
-      if (!used.has(key)) combos.push({ niche, city, state: state.uf })
-    }
-    if (!combos.length) {
-      setMapsError('Todas as combinações disponíveis para as cidades carregadas já foram usadas. Escolha outro estado ou recarregue as cidades.')
-      return
-    }
-    const combo = combos[Math.floor(Math.random() * combos.length)]
-    const key = [combo.niche, combo.city, combo.state].map(normalize).join('|')
-    setMapsNiche(combo.niche)
-    setMapsCity(combo.city)
-    setMapsState(combo.state)
-    setUsedSearchCombos((current) => current.includes(key) ? current : [...current, key])
+    const niches = allBusinessNiches
+    const availableStates = [...brazilStates].sort(() => Math.random() - 0.5)
+    setCitiesLoading(true)
     setMapsError('')
-    setMapsMessage('Combinação inédita selecionada e salva neste navegador.')
+    setMapsMessage('')
+    try {
+      for (const state of availableStates) {
+        const response = await fetch('https://servicodados.ibge.gov.br/api/v1/localidades/estados/' + state.uf + '/municipios?orderBy=nome')
+        if (!response.ok) continue
+        const cities = await response.json() as Array<{ nome: string }>
+        const shuffledCities = cities.sort(() => Math.random() - 0.5)
+        for (const cityItem of shuffledCities) {
+          const shuffledNiches = [...niches].sort(() => Math.random() - 0.5)
+          for (const niche of shuffledNiches) {
+            const key = [niche, cityItem.nome, state.uf].map(normalize).join('|')
+            if (used.has(key)) continue
+            setMapsState(state.uf)
+            setMapsCities(cities.map((item) => item.nome))
+            setMapsNiche(niche)
+            setMapsCity(cityItem.nome)
+            setUsedSearchCombos((current) => current.includes(key) ? current : [...current, key])
+            setMapsMessage('Combinação inédita selecionada e salva neste navegador.')
+            return
+          }
+        }
+      }
+      setMapsError('Todas as combinações disponíveis já foram usadas neste navegador.')
+    } catch {
+      setMapsError('Não foi possível carregar as cidades agora. Tente novamente.')
+    } finally {
+      setCitiesLoading(false)
+    }
   }
   const clearFilters = () => { setSearch(''); setNicheFilter('Todos'); setStatusFilter('Todos') }
   const searchGoogleMaps = async (event: FormEvent<HTMLFormElement>) => {
@@ -285,7 +294,7 @@ export default function Page() {
           <label className="grid gap-1.5 text-sm font-semibold text-slate-700"><span>Cidade</span><select required value={mapsCity} onChange={(e) => setMapsCity(e.target.value)} disabled={!mapsState || citiesLoading || mapsCities.length === 0} className="h-11 min-w-0 rounded-xl border border-slate-200 bg-white px-3 font-normal outline-none focus:border-[#347d79] disabled:bg-slate-100"><option value="">{!mapsState ? 'Selecione primeiro o estado' : citiesLoading ? 'Carregando cidades...' : 'Selecione a cidade'}</option>{mapsCities.map((city) => <option key={city} value={city}>{city}</option>)}</select></label>
           <label className="grid gap-1.5 text-sm font-semibold text-slate-700"><span>Estado</span><select required value={mapsState} onChange={(e) => setMapsState(e.target.value)} className="h-11 min-w-0 rounded-xl border border-slate-200 bg-white px-3 font-normal outline-none focus:border-[#347d79]"><option value="">Selecione o estado</option>{brazilStates.map((state) => <option key={state.uf} value={state.uf}>{state.name} ({state.uf})</option>)}</select></label>
         </div>
-        <button type="button" onClick={generateUniqueSearchCombo} disabled={citiesLoading || !mapsState || mapsCities.length === 0} className="mt-4 mr-2 flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-[#176b57] bg-white px-4 text-sm font-bold text-[#176b57] hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto">Gerar nicho, cidade e estado automaticamente (não repetir)</button>
+        <button type="button" onClick={generateUniqueSearchCombo} disabled={citiesLoading} className="mt-4 mr-2 flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-[#176b57] bg-white px-4 text-sm font-bold text-[#176b57] hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto">{citiesLoading ? 'Gerando combinação...' : 'Gerar nicho, cidade e estado automaticamente (não repetir)'}</button>
         <button type="submit" disabled={mapsLoading} className="mt-4 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#176b57] px-4 text-sm font-bold text-white hover:bg-[#125642] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto">
           {mapsLoading ? <LoaderCircle className="size-4 animate-spin" /> : <Search className="size-4" />}{mapsLoading ? 'Pesquisando empresas...' : 'Pesquisar e importar empresas'}
         </button>
