@@ -16,6 +16,8 @@ const exampleLeads: Lead[] = [
 ]
 const statusStyles: Record<LeadStatus, string> = { 'A contactar': 'bg-amber-50 text-[#9a7b3f] ring-amber-200', 'Em negociação': 'bg-blue-50 text-[#347d79] ring-blue-200', Fechado: 'bg-emerald-50 text-[#347d79] ring-emerald-200', Rejeitado: 'bg-slate-100 text-slate-500 ring-slate-200' }
 const normalizePhone = (phone: string) => phone.replace(/\D/g, '')
+const brazilStates = [{uf:'AC',name:'Acre'},{uf:'AL',name:'Alagoas'},{uf:'AP',name:'Amapá'},{uf:'AM',name:'Amazonas'},{uf:'BA',name:'Bahia'},{uf:'CE',name:'Ceará'},{uf:'DF',name:'Distrito Federal'},{uf:'ES',name:'Espírito Santo'},{uf:'GO',name:'Goiás'},{uf:'MA',name:'Maranhão'},{uf:'MT',name:'Mato Grosso'},{uf:'MS',name:'Mato Grosso do Sul'},{uf:'MG',name:'Minas Gerais'},{uf:'PA',name:'Pará'},{uf:'PB',name:'Paraíba'},{uf:'PR',name:'Paraná'},{uf:'PE',name:'Pernambuco'},{uf:'PI',name:'Piauí'},{uf:'RJ',name:'Rio de Janeiro'},{uf:'RN',name:'Rio Grande do Norte'},{uf:'RS',name:'Rio Grande do Sul'},{uf:'RO',name:'Rondônia'},{uf:'RR',name:'Roraima'},{uf:'SC',name:'Santa Catarina'},{uf:'SP',name:'São Paulo'},{uf:'SE',name:'Sergipe'},{uf:'TO',name:'Tocantins'}]
+const businessNiches = ['Academia','Auto center','Barbearia','Clínica médica','Clínica odontológica','Loja de roupas','Oficina mecânica','Pet shop','Pizzaria','Restaurante','Salão de beleza','Supermercado','Diarista / limpeza','Hotel / pousada','Imobiliária','Farmácia','Ótica','Padaria','Assistência técnica','Outros']
 
 export default function Page() {
   const [leads, setLeads] = useState<Lead[]>([])
@@ -29,6 +31,8 @@ export default function Page() {
   const [mapsNiche, setMapsNiche] = useState('')
   const [mapsCity, setMapsCity] = useState('')
   const [mapsState, setMapsState] = useState('')
+  const [mapsCities, setMapsCities] = useState<string[]>([])
+  const [citiesLoading, setCitiesLoading] = useState(false)
   const [mapsLoading, setMapsLoading] = useState(false)
   const [mapsError, setMapsError] = useState('')
   const [mapsMessage, setMapsMessage] = useState('')
@@ -39,6 +43,18 @@ export default function Page() {
 
   useEffect(() => { const saved = window.localStorage.getItem('prospecmap-leads'); setLeads(saved ? JSON.parse(saved) : exampleLeads); setIsLoaded(true) }, [])
   useEffect(() => { if (isLoaded) window.localStorage.setItem('prospecmap-leads', JSON.stringify(leads)) }, [leads, isLoaded])
+  useEffect(() => {
+    if (!mapsState) { setMapsCities([]); setMapsCity(''); return }
+    let cancelled = false
+    setCitiesLoading(true)
+    setMapsCity('')
+    fetch(`https://servicodados.ibge.gov.br/api/v1/localidades/estados/${mapsState}/municipios?orderBy=nome`)
+      .then((response) => { if (!response.ok) throw new Error('Não foi possível carregar as cidades'); return response.json() })
+      .then((data: Array<{ nome: string }>) => { if (!cancelled) setMapsCities(data.map((city) => city.nome)) })
+      .catch(() => { if (!cancelled) setMapsCities([]) })
+      .finally(() => { if (!cancelled) setCitiesLoading(false) })
+    return () => { cancelled = true }
+  }, [mapsState])
   const loadSites = async () => {
     if (!adminToken.trim()) { setSiteMessage('Digite a credencial administrativa para carregar os sites.'); return }
     try {
@@ -200,12 +216,12 @@ export default function Page() {
       <form onSubmit={searchGoogleMaps} className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
         <div className="flex items-start gap-3">
           <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-cyan-50 text-[#347d79]"><MapPinned className="size-5" /></div>
-          <div><h2 className="font-bold text-slate-900">Buscar empresas no Google Maps</h2><p className="mt-1 text-sm leading-5 text-slate-500">Preencha os três campos. Empresas sem site serão adicionadas à carteira; duplicadas são ignoradas.</p></div>
+          <div><h2 className="font-bold text-slate-900">Buscar empresas no Google Maps</h2><p className="mt-1 text-sm leading-5 text-slate-500">Selecione o nicho, o estado e depois a cidade. Empresas sem site serão adicionadas à carteira; duplicadas são ignoradas.</p></div>
         </div>
         <div className="mt-4 grid gap-3 sm:grid-cols-3">
-          <label className="grid gap-1.5 text-sm font-semibold text-slate-700"><span>Nicho / tipo de empresa</span><input value={mapsNiche} onChange={(e) => setMapsNiche(e.target.value)} placeholder="Ex.: dentistas, pizzarias" className="h-11 min-w-0 rounded-xl border border-slate-200 px-3 font-normal outline-none focus:border-[#347d79]" /></label>
-          <label className="grid gap-1.5 text-sm font-semibold text-slate-700"><span>Cidade</span><input value={mapsCity} onChange={(e) => setMapsCity(e.target.value)} placeholder="Ex.: Macaúbas" className="h-11 min-w-0 rounded-xl border border-slate-200 px-3 font-normal outline-none focus:border-[#347d79]" /></label>
-          <label className="grid gap-1.5 text-sm font-semibold text-slate-700"><span>Estado</span><input value={mapsState} onChange={(e) => setMapsState(e.target.value)} placeholder="Ex.: BA" maxLength={2} className="h-11 min-w-0 rounded-xl border border-slate-200 px-3 font-normal uppercase outline-none focus:border-[#347d79]" /></label>
+          <label className="grid gap-1.5 text-sm font-semibold text-slate-700"><span>Nicho / tipo de empresa</span><select required value={mapsNiche} onChange={(e) => setMapsNiche(e.target.value)} className="h-11 min-w-0 rounded-xl border border-slate-200 bg-white px-3 font-normal outline-none focus:border-[#347d79]"><option value="">Selecione o nicho</option>{businessNiches.map((niche) => <option key={niche} value={niche}>{niche}</option>)}</select></label>
+          <label className="grid gap-1.5 text-sm font-semibold text-slate-700"><span>Cidade</span><select required value={mapsCity} onChange={(e) => setMapsCity(e.target.value)} disabled={!mapsState || citiesLoading || mapsCities.length === 0} className="h-11 min-w-0 rounded-xl border border-slate-200 bg-white px-3 font-normal outline-none focus:border-[#347d79] disabled:bg-slate-100"><option value="">{!mapsState ? 'Selecione primeiro o estado' : citiesLoading ? 'Carregando cidades...' : 'Selecione a cidade'}</option>{mapsCities.map((city) => <option key={city} value={city}>{city}</option>)}</select></label>
+          <label className="grid gap-1.5 text-sm font-semibold text-slate-700"><span>Estado</span><select required value={mapsState} onChange={(e) => setMapsState(e.target.value)} className="h-11 min-w-0 rounded-xl border border-slate-200 bg-white px-3 font-normal outline-none focus:border-[#347d79]"><option value="">Selecione o estado</option>{brazilStates.map((state) => <option key={state.uf} value={state.uf}>{state.name} ({state.uf})</option>)}</select></label>
         </div>
         <button type="submit" disabled={mapsLoading} className="mt-4 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#176b57] px-4 text-sm font-bold text-white hover:bg-[#125642] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto">
           {mapsLoading ? <LoaderCircle className="size-4 animate-spin" /> : <Search className="size-4" />}{mapsLoading ? 'Pesquisando empresas...' : 'Pesquisar e importar empresas'}
