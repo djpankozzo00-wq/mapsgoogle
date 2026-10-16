@@ -6,7 +6,8 @@ import { ArrowLeft, ArrowRight, Building2, Check, CheckCircle2, ChevronDown, Cir
 
 type LeadStatus = 'A contactar' | 'Em negociação' | 'Fechado' | 'Rejeitado'
 type WhatsappCheck = 'Não verificado' | 'Confirmado no WhatsApp' | 'Não encontrado no WhatsApp'
-type Lead = { id: string; name: string; niche: string; city: string; state: string; country: string; status: LeadStatus; whatsapp: string; notes: string; whatsappCheck?: WhatsappCheck }\ntype DeletedCompany = { name: string; city: string; state: string; country: string; niche: string; cep: string; mapsUrl: string }
+type Lead = { id: string; name: string; niche: string; city: string; state: string; country: string; status: LeadStatus; whatsapp: string; notes: string; whatsappCheck?: WhatsappCheck }
+type DeletedCompany = { name: string; city: string; state: string; country: string; niche: string; cep: string; mapsUrl: string }
 type SiteRecord = { id: string; slug: string; site_data: { leadId?: string; name: string; niche: string; city: string; state: string; country: string; whatsapp: string; photos?: SitePhoto[] }; payment_status: 'pending' | 'paid'; site_status: 'preview' | 'published'; pix_key: string; price: number }
 const statuses: LeadStatus[] = ['A contactar', 'Em negociação', 'Fechado', 'Rejeitado']
 const exampleLeads: Lead[] = [
