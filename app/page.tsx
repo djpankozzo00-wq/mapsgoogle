@@ -340,35 +340,35 @@ function Field({ label, name, placeholder, required, defaultValue, maxLength, in
 function LeadCard({ lead, onEdit, onDelete, onWhatsappSend, onStatusChange, onWhatsappCheckChange }: { lead: Lead; onEdit: () => void; onDelete: () => void; onWhatsappSend: () => void; onStatusChange: (status: LeadStatus) => void; onWhatsappCheckChange: (status: WhatsappCheck) => void }) { const phone = normalizePhone(lead.whatsapp); const whatsappTestUrl = `https://wa.me/${phone}`; const [plaquinhaMessage, setPlaquinhaMessage] = useState(''); const generatePlaquinhaMessage = () => { const approaches = [
 `Olá, pessoal da ${lead.name}! Tudo bem? 😊
 
-Sou o Fabrício e trabalho com plaquinhas virtuais personalizadas para facilitar o acesso dos clientes ao Pix, à Avaliação no Google Maps, ao Wi-Fi, Instagram e WhatsApp. Eu mesmo configuro as informações do estabelecimento antes de entregar.
+Sou Fabrício e trabalho com marketing e publicidade na LinkFácil Qr. Apresento plaquinhas virtuais personalizadas para facilitar o acesso dos clientes ao Pix, à Avaliação no Google Maps, ao Wi-Fi, Instagram e WhatsApp. Eu mesmo configuro as informações do estabelecimento antes de entregar.
 
 Cada plaquinha custa R$ 30. Hoje, o conjunto com as 5 está em promoção: de R$ 150 por R$ 100, sem mensalidade.
 
 Você prefere receber uma prévia por vídeo de 14 segundos, apenas mostrando as plaquinhas, ou por link personalizado? Se escolher o link, qual modelo gostaria de ver: Pix, Avaliação no Google Maps, Wi-Fi, Instagram ou WhatsApp?`,
 `Oi, pessoal da ${lead.name}! Como vão? 😊
 
-Tenho plaquinhas virtuais que reúnem opções como Pix, Avaliação no Google Maps, Wi-Fi, Instagram e WhatsApp. Antes da entrega, eu mesmo configuro tudo com as informações da empresa.
+Sou Fabrício, trabalho com marketing e publicidade na LinkFácil Qr e apresento plaquinhas virtuais que reúnem opções como Pix, Avaliação no Google Maps, Wi-Fi, Instagram e WhatsApp. Antes da entrega, eu mesmo configuro tudo com as informações da empresa.
 
 Cada plaquinha custa R$ 30. Hoje, o conjunto com as cinco está com uma condição especial: de R$ 150 por R$ 100. Não tem mensalidade.
 
 Posso enviar uma prévia para vocês conhecerem. Preferem um vídeo de 14 segundos mostrando as plaquinhas ou um link personalizado? Caso escolham o link, qual modelo querem conhecer primeiro: Pix, Avaliação no Google Maps, Wi-Fi, Instagram ou WhatsApp?`,
 `Olá, equipe da ${lead.name}! Espero que estejam bem.
 
-Estou apresentando plaquinhas virtuais personalizadas para empresas, com acesso ao Pix, à Avaliação no Google Maps, ao Wi-Fi, Instagram e WhatsApp. A configuração é feita por mim antes da entrega, conforme as informações do estabelecimento.
+Sou Fabrício e trabalho com marketing e publicidade na LinkFácil Qr. Estou apresentando plaquinhas virtuais personalizadas para empresas, com acesso ao Pix, à Avaliação no Google Maps, ao Wi-Fi, Instagram e WhatsApp. A configuração é feita por mim antes da entrega, conforme as informações do estabelecimento.
 
 **Promoção de hoje:** uma plaquinha por R$ 30 ou o conjunto com 5 por R$ 100, em vez de R$ 150. Sem mensalidade.
 
 Para conhecer os modelos, vocês podem receber uma prévia por vídeo de 14 segundos ou por link personalizado. Se preferirem o link, qual plaquinha gostariam de ver: Pix, Avaliação no Google Maps, Wi-Fi, Instagram ou WhatsApp?`,
 `Opa, pessoal da ${lead.name}, tudo certo? 👋
 
-Sou o Fabrício. Faço a configuração de plaquinhas virtuais para empresas, com Pix, Avaliação no Google Maps, Wi-Fi, Instagram e WhatsApp.
+Sou Fabrício, trabalho com marketing e publicidade na LinkFácil Qr e faço a configuração de plaquinhas virtuais para empresas, com Pix, Avaliação no Google Maps, Wi-Fi, Instagram e WhatsApp.
 
 Os valores são R$ 30 por unidade ou, na promoção de hoje, **R$ 100 pelo conjunto com 5** (preço original de R$ 150). Sem mensalidade.
 
 Querem conhecer? Posso enviar uma prévia por vídeo de 14 segundos ou por link personalizado. Se escolherem o link, me digam qual modelo gostariam de ver primeiro.`,
 `Olá! Tudo bem com vocês, da ${lead.name}? 😊
 
-Gostaria de apresentar uma opção de plaquinhas virtuais personalizadas para o estabelecimento. Elas podem reunir acessos ao Pix, à Avaliação no Google Maps, ao Wi-Fi, Instagram e WhatsApp. Eu configuro as informações antes de entregar.
+Sou Fabrício e trabalho com marketing e publicidade na LinkFácil Qr. Gostaria de apresentar uma opção de plaquinhas virtuais personalizadas para o estabelecimento. Elas podem reunir acessos ao Pix, à Avaliação no Google Maps, ao Wi-Fi, Instagram e WhatsApp. Eu configuro as informações antes de entregar.
 
 O valor é de R$ 30 por unidade. Hoje, o conjunto com as cinco está por **R$ 100, em vez de R$ 150**, sem mensalidade.
 
