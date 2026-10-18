@@ -270,8 +270,11 @@ export default function Page() {
     setLeads((current) => current.filter((item) => item.id !== id))
   }
   const sendLeadToWhatsapp = (_id: string) => {
-    const windowStatus = getApproachWindow()
-    if (!windowStatus.allowed) window.alert(windowStatus.message)
+    if (scheduleModeEnabled) {
+      const windowStatus = getApproachWindow()
+      if (!windowStatus.allowed) window.alert(windowStatus.message)
+    }
+    // Com o modo por horário desativado, permite abrir o WhatsApp normalmente.
     // Abrir o WhatsApp não remove a empresa; a remoção acontece somente após confirmação manual do envio.
   }
   const generateUniqueSearchCombo = async () => {
