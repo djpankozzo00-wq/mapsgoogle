@@ -103,7 +103,9 @@ export default function Page() {
       const windowStatus = getApproachWindow()
       if (!windowStatus.allowed) { window.alert(windowStatus.message); return }
     }
-    const windowStatus = getApproachWindow()
+    const windowStatus = scheduleModeEnabled
+      ? getApproachWindow()
+      : { allowed: true, slot: 'manual', message: 'Modo por horário desativado.' }
     if (!windowStatus.allowed) { window.alert(windowStatus.message); return }
     if (!window.confirm('Confirma que a mensagem foi enviada para ' + leadName + ' pelo WhatsApp?')) return
     const day = approachDayKey()
