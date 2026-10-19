@@ -287,7 +287,7 @@ export default function Page() {
       const saved = JSON.parse(window.localStorage.getItem('prospecmap-daily-approaches') || '{}')
       const count = saved.day === day ? Number(saved.count) || 0 : 0
       if (count >= 20) {
-        window.alert('Limite diário de 15 abordagens atingido.')
+        window.alert('Limite diário de 20 abordagens atingido.')
         refreshApproachCounter()
         return
       }
