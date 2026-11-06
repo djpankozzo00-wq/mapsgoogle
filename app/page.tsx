@@ -368,7 +368,7 @@ export default function Page() {
         setMapsCity(city)
         setUsedSearchCombos((current) => current.includes(key) ? current : [...current, key])
         setMapsMessage('Nicho, cidade e região escolhidos automaticamente.')
-        return
+        return { niche, city, state: stateName }
       }
       setMapsError('Não encontrei uma combinação nova. Tente gerar novamente.')
     } catch (error) {
@@ -389,11 +389,11 @@ export default function Page() {
     try {
       // If the user skips the generator, choose all three values automatically.
       if (!searchNiche || !searchCity || !searchState) {
-        await generateUniqueSearchCombo()
-        searchNiche = mapsNiche.trim()
-        searchCity = mapsCity.trim()
-        searchState = mapsState.trim()
-        if (!searchNiche || !searchCity || !searchState) throw new Error('Gere uma combinação de nicho, cidade e região antes de pesquisar.')
+        const generated = await generateUniqueSearchCombo()
+        if (!generated) throw new Error('Gere uma combinação de nicho, cidade e região antes de pesquisar.')
+        searchNiche = generated.niche
+        searchCity = generated.city
+        searchState = generated.state
       }
       const response = await fetch('/api/hasdata/search', {
         method: 'POST',
