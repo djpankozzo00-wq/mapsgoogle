@@ -264,7 +264,11 @@ export default function Page() {
 
   const niches = useMemo(() => [...new Set(leads.map((lead) => lead.niche))].sort(), [leads])
   const filteredLeads = useMemo(() => leads.filter((lead) => `${lead.name} ${lead.city} ${lead.state} ${lead.niche} ${lead.notes}`.toLowerCase().includes(search.toLowerCase()) && (nicheFilter === 'Todos' || lead.niche === nicheFilter) && (statusFilter === 'Todos' || lead.status === statusFilter)), [leads, search, nicheFilter, statusFilter])
-  const displayedLeads = useMemo(() => filteredLeads.filter((lead) => (lead.country || 'Brasil') === leadMarket), [filteredLeads, leadMarket])
+  const displayedLeads = useMemo(() => filteredLeads.filter((lead) => {
+    const normalizedCountry = (lead.country || 'Brasil').trim().toUpperCase()
+    const isBrazil = normalizedCountry === 'BR' || normalizedCountry === 'BRASIL' || normalizedCountry === 'BRAZIL'
+    return leadMarket === 'Brasil' ? isBrazil : !isBrazil
+  }), [filteredLeads, leadMarket])
   const openNew = () => { setEditingLead(null); setIsFormOpen(true) }
   const openEdit = (lead: Lead) => { setEditingLead(lead); setIsFormOpen(true) }
   const saveLead = (event: FormEvent<HTMLFormElement>) => { event.preventDefault(); const form = new FormData(event.currentTarget); const data = { name: String(form.get('name') || '').trim(), niche: String(form.get('niche') || '').trim(), city: String(form.get('city') || '').trim(), state: String(form.get('state') || '').trim().toUpperCase(), country: String(form.get('country') || 'Brasil').trim(), status: String(form.get('status') || 'A contactar') as LeadStatus, whatsapp: normalizePhone(String(form.get('whatsapp') || '')), notes: String(form.get('notes') || '').trim() }; setLeads((current) => editingLead ? current.map((lead) => lead.id === editingLead.id ? { ...editingLead, ...data } : lead) : [{ id: crypto.randomUUID(), ...data }, ...current]); setIsFormOpen(false) }
