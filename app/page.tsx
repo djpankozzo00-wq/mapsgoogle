@@ -18,20 +18,29 @@ const exampleLeads: Lead[] = [
 const statusStyles: Record<LeadStatus, string> = { 'A contactar': 'bg-amber-50 text-[#9a7b3f] ring-amber-200', 'Em negociação': 'bg-blue-50 text-[#347d79] ring-blue-200', Fechado: 'bg-emerald-50 text-[#347d79] ring-emerald-200', Rejeitado: 'bg-slate-100 text-slate-500 ring-slate-200' }
 const normalizePhone = (phone: string, country = 'Brasil') => {
   let digits = phone.replace(/\D/g, '')
-  const key = country.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+  const key = country.normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase()
+  const isNorthAmerica = ['us', 'eua', 'estados unidos', 'united states', 'united states of america', 'usa', 'canada', 'ca'].includes(key)
+
+  // Leads dos EUA/Canadá devem usar +1. Remove um +55 antigo que possa ter
+  // sido acrescentado incorretamente antes de aplicar o código internacional correto.
+  if (isNorthAmerica) {
+    if (digits.startsWith('55') && (digits.length === 12 || digits.length === 13)) digits = digits.slice(2)
+    digits = digits.replace(/^0+/, '')
+    if (digits.length === 10) digits = '1' + digits
+    return digits
+  }
+
   const codes: Record<string, string> = {
-    'estados unidos': '1', 'united states': '1', usa: '1', canada: '1',
-    'reino unido': '44', 'united kingdom': '44', uk: '44',
-    alemanha: '49', germany: '49', franca: '33', france: '33',
-    italia: '39', italy: '39', espanha: '34', spain: '34',
-    portugal: '351', mexico: '52', argentina: '54', colombia: '57',
-    chile: '56', australia: '61', japao: '81', japan: '81',
-    india: '91', brasil: '55', brazil: '55'
+    'reino unido': '44', 'united kingdom': '44', uk: '44', gb: '44',
+    alemanha: '49', germany: '49', de: '49', franca: '33', france: '33', fr: '33',
+    italia: '39', italy: '39', it: '39', espanha: '34', spain: '34', es: '34',
+    portugal: '351', pt: '351', mexico: '52', mx: '52', argentina: '54', ar: '54',
+    colombia: '57', co: '57', chile: '56', cl: '56', australia: '61', au: '61',
+    japao: '81', japan: '81', jp: '81', india: '91', in: '91',
+    brasil: '55', brazil: '55', br: '55'
   }
   const code = codes[key]
-  if (code && !digits.startsWith(code) && (code !== '1' || digits.length <= 10)) {
-    digits = code + digits.replace(/^0+/, '')
-  }
+  if (code && !digits.startsWith(code)) digits = code + digits.replace(/^0+/, '')
   return digits
 }
 const internationalMessage = (lead: Pick<Lead, 'name' | 'country'>) => {
