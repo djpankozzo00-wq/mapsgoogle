@@ -34,7 +34,7 @@ export async function POST(request: Request) {
 
   const niche = typeof body.niche === 'string' ? body.niche.trim().slice(0, 100) : ''
   const city = typeof body.city === 'string' ? body.city.trim().slice(0, 100) : ''
-  const state = typeof body.state === 'string' ? body.state.trim().slice(0, 2).toUpperCase() : ''
+  const state = typeof body.state === 'string' ? body.state.trim().slice(0, 100) : ''
   const country = typeof body.country === 'string' ? body.country.trim().toUpperCase() : 'BR'
   const supportedCountries = new Set(['BR', 'US', 'GB', 'DE', 'FR', 'IT', 'ES', 'PT', 'NL', 'BE', 'IE', 'AT'])
 
