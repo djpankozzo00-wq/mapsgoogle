@@ -27,6 +27,19 @@ const internationalMessage = (lead: Pick<Lead, 'name' | 'country'>) => {
   return null
 }
 const brazilStates = [{uf:'AC',name:'Acre'},{uf:'AL',name:'Alagoas'},{uf:'AP',name:'Amapá'},{uf:'AM',name:'Amazonas'},{uf:'BA',name:'Bahia'},{uf:'CE',name:'Ceará'},{uf:'DF',name:'Distrito Federal'},{uf:'ES',name:'Espírito Santo'},{uf:'GO',name:'Goiás'},{uf:'MA',name:'Maranhão'},{uf:'MT',name:'Mato Grosso'},{uf:'MS',name:'Mato Grosso do Sul'},{uf:'MG',name:'Minas Gerais'},{uf:'PA',name:'Pará'},{uf:'PB',name:'Paraíba'},{uf:'PR',name:'Paraná'},{uf:'PE',name:'Pernambuco'},{uf:'PI',name:'Piauí'},{uf:'RJ',name:'Rio de Janeiro'},{uf:'RN',name:'Rio Grande do Norte'},{uf:'RS',name:'Rio Grande do Sul'},{uf:'RO',name:'Rondônia'},{uf:'RR',name:'Roraima'},{uf:'SC',name:'Santa Catarina'},{uf:'SP',name:'São Paulo'},{uf:'SE',name:'Sergipe'},{uf:'TO',name:'Tocantins'}]
+const internationalLocations: Record<'US', Array<{ state: string; cities: string[] }>> = {
+  US: [
+    { state: 'California', cities: ['Los Angeles', 'San Diego', 'San Francisco', 'Sacramento'] },
+    { state: 'Florida', cities: ['Miami', 'Orlando', 'Tampa', 'Jacksonville'] },
+    { state: 'Texas', cities: ['Houston', 'Austin', 'Dallas', 'San Antonio'] },
+    { state: 'New York', cities: ['New York', 'Buffalo', 'Rochester', 'Albany'] },
+    { state: 'Nevada', cities: ['Las Vegas', 'Reno', 'Henderson'] },
+    { state: 'Illinois', cities: ['Chicago', 'Springfield', 'Rockford'] },
+    { state: 'Washington', cities: ['Seattle', 'Spokane', 'Tacoma'] },
+    { state: 'Massachusetts', cities: ['Boston', 'Worcester', 'Cambridge'] },
+  ],
+}
+const countryLabels: Record<'BR' | 'US', string> = { BR: 'Brasil', US: 'Estados Unidos' }
 const businessNiches = [
   { group: "Alimentação e bebidas", items: ["Açaíteria","Adega","Bar","Bar de tapas","Bistrô","Buffet","Cafeteria","Cervejaria","Choperia","Churrascaria","Comida árabe","Comida chinesa","Comida japonesa","Comida mexicana","Comida vegana","Creperia","Doceria","Empório","Food truck","Hamburgueria","Lanchonete","Marmitaria","Padaria","Pastelaria","Pizzaria","Restaurante","Restaurante italiano","Restaurante self-service","Salgaderia","Sorveteria"] },
   { group: "Saúde e bem-estar", items: ["Acupuntura","Cardiologista","Clínica de exames","Clínica de fisioterapia","Clínica médica","Clínica odontológica","Dermatologista","Endocrinologista","Fonoaudiólogo","Ginecologista","Laboratório de análises clínicas","Médico","Nutricionista","Oftalmologista","Ortopedista","Pediatra","Psicólogo","Psiquiatra","Quiropraxia","Terapeuta ocupacional","Veterinário"] },
@@ -166,7 +179,7 @@ export default function Page() {
   useEffect(() => { if (historyLoaded) window.localStorage.setItem('prospecmap-deleted-company-history', JSON.stringify(deletedCompanyHistory)) }, [deletedCompanyHistory, historyLoaded])
   useEffect(() => { if (isLoaded) window.localStorage.setItem('prospecmap-leads', JSON.stringify(leads)) }, [leads, isLoaded])
   useEffect(() => {
-    if (!mapsState) { setMapsCities([]); setMapsCity(''); return }
+    if (mapsCountry !== 'BR' || !mapsState) { setMapsCities([]); setMapsCity(''); return }
     let cancelled = false
     setCitiesLoading(true)
     setMapsCity('')
@@ -327,32 +340,37 @@ export default function Page() {
     setMapsError('')
     setMapsMessage('')
     try {
-      // Reaproveita a lista já carregada; se não houver, consulta apenas um estado.
-      let state = brazilStates.find((item) => item.uf === mapsState)
+      let stateName = mapsState
       let cityNames = mapsCities
-      if (!state) state = brazilStates[Math.floor(Math.random() * brazilStates.length)]
-      if (cityNames.length === 0 || !mapsState || state.uf !== mapsState) {
-        const response = await fetch('https://servicodados.ibge.gov.br/api/v1/localidades/estados/' + state.uf + '/municipios?orderBy=nome')
-        if (!response.ok) throw new Error('Não foi possível carregar as cidades do IBGE.')
-        const data = await response.json() as Array<{ nome: string }>
-        cityNames = data.map((city) => city.nome)
+      if (mapsCountry === 'BR') {
+        const state = brazilStates.find((item) => item.uf === mapsState) || brazilStates[Math.floor(Math.random() * brazilStates.length)]
+        stateName = state.uf
+        if (cityNames.length === 0 || state.uf !== mapsState) {
+          const response = await fetch('https://servicodados.ibge.gov.br/api/v1/localidades/estados/' + state.uf + '/municipios?orderBy=nome')
+          if (!response.ok) throw new Error('Não foi possível carregar as cidades do IBGE.')
+          const data = await response.json() as Array<{ nome: string }>
+          cityNames = data.map((city) => city.nome)
+        }
+      } else {
+        const location = internationalLocations.US[Math.floor(Math.random() * internationalLocations.US.length)]
+        stateName = location.state
+        cityNames = location.cities
       }
-      if (cityNames.length === 0) throw new Error('Não foram encontradas cidades para esse estado.')
-      // Testa combinações aleatórias sem montar a enorme lista de todos os municípios do Brasil.
+      if (cityNames.length === 0) throw new Error('Não foram encontradas cidades para essa região.')
       for (let attempt = 0; attempt < 250; attempt++) {
         const niche = niches[Math.floor(Math.random() * niches.length)]
         const city = cityNames[Math.floor(Math.random() * cityNames.length)]
-        const key = [niche, city, state.uf].map(normalize).join('|')
+        const key = [mapsCountry, niche, city, stateName].map(normalize).join('|')
         if (used.has(key)) continue
-        setMapsState(state.uf)
+        setMapsState(stateName)
         setMapsCities(cityNames)
         setMapsNiche(niche)
         setMapsCity(city)
         setUsedSearchCombos((current) => current.includes(key) ? current : [...current, key])
-        setMapsMessage('Nicho, cidade e estado escolhidos.')
+        setMapsMessage('Nicho, cidade e região escolhidos automaticamente.')
         return
       }
-      setMapsError('Não encontrei uma combinação nova nesse estado. Tente gerar novamente.')
+      setMapsError('Não encontrei uma combinação nova. Tente gerar novamente.')
     } catch (error) {
       setMapsError(error instanceof Error ? error.message : 'Não foi possível gerar a combinação agora. Tente novamente.')
     } finally {
@@ -371,19 +389,11 @@ export default function Page() {
     try {
       // If the user skips the generator, choose all three values automatically.
       if (!searchNiche || !searchCity || !searchState) {
-        const randomState = [...brazilStates].sort(() => Math.random() - 0.5)[0]
-        const cityResponse = await fetch('https://servicodados.ibge.gov.br/api/v1/localidades/estados/' + randomState.uf + '/municipios?orderBy=nome')
-        if (!cityResponse.ok) throw new Error('Não foi possível carregar cidades para a seleção automática.')
-        const availableCities = await cityResponse.json() as Array<{ nome: string }>
-        if (!availableCities.length || !allBusinessNiches.length) throw new Error('Não há cidades ou nichos disponíveis para gerar a busca.')
-        searchState = randomState.uf
-        searchCity = availableCities[Math.floor(Math.random() * availableCities.length)].nome
-        searchNiche = allBusinessNiches[Math.floor(Math.random() * allBusinessNiches.length)]
-        setMapsState(searchState)
-        setMapsCities(availableCities.map((item) => item.nome))
-        setMapsCity(searchCity)
-        setMapsNiche(searchNiche)
-        setMapsMessage('Nicho, cidade e estado foram escolhidos automaticamente para esta busca.')
+        await generateUniqueSearchCombo()
+        searchNiche = mapsNiche.trim()
+        searchCity = mapsCity.trim()
+        searchState = mapsState.trim()
+        if (!searchNiche || !searchCity || !searchState) throw new Error('Gere uma combinação de nicho, cidade e região antes de pesquisar.')
       }
       const response = await fetch('/api/hasdata/search', {
         method: 'POST',
@@ -399,7 +409,7 @@ export default function Page() {
         niche: place.type || searchNiche,
         city: searchCity,
         state: searchState.toUpperCase(),
-        country: 'Brasil',
+        country: countryLabels[mapsCountry],
         status: 'A contactar' as LeadStatus,
         whatsapp: normalizePhone(place.phone || ''),
         notes: [
@@ -452,7 +462,7 @@ export default function Page() {
           <button type="button" onClick={() => { setMapsCountry('BR'); setMapsState(''); setMapsCity(''); setMapsCities([]) }} className={`rounded-lg px-3 py-2.5 text-sm font-bold transition ${mapsCountry === 'BR' ? 'bg-white text-[#176b57] shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>Empresas nacionais</button>
           <button type="button" onClick={() => { setMapsCountry('US'); setMapsState(''); setMapsCity(''); setMapsCities([]) }} className={`rounded-lg px-3 py-2.5 text-sm font-bold transition ${mapsCountry === 'US' ? 'bg-white text-[#176b57] shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>Empresas internacionais</button>
         </div>
-        {mapsCountry === 'BR' && <button type="button" onClick={generateUniqueSearchCombo} disabled={citiesLoading} className="mt-4 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border-2 border-[#176b57] bg-emerald-50 px-4 py-3 text-sm font-bold text-[#176b57] hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50">{citiesLoading ? 'Gerando combinação...' : 'Gerar nicho, cidade e estado automaticamente (não repetir)'}</button>}
+        <button type="button" onClick={generateUniqueSearchCombo} disabled={citiesLoading} className="mt-4 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border-2 border-[#176b57] bg-emerald-50 px-4 py-3 text-sm font-bold text-[#176b57] hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50">{citiesLoading ? 'Gerando combinação...' : 'Gerar nicho, cidade e estado automaticamente (não repetir)'}</button>
         <div className="mt-4 grid gap-3 sm:grid-cols-3">
           <label className="grid gap-1.5 text-sm font-semibold text-slate-700"><span style={{color:"#17252d"}}>Nicho / tipo de empresa</span><select style={{backgroundColor:"#f4f7f9",color:"#17252d",borderColor:"#aebdc6",colorScheme:"light",WebkitTextFillColor:"#17252d"}} value={mapsNiche} onChange={(e) => setMapsNiche(e.target.value)} className="h-11 min-w-0 rounded-xl border border-slate-200 bg-white px-3 font-normal outline-none focus:border-[#347d79]"><option value="">Selecione o nicho</option>{businessNiches.map((group) => <optgroup key={group.group} label={group.group}>{group.items.map((niche) => <option key={niche} value={niche}>{niche}</option>)}</optgroup>)}</select></label>
           <label className="grid gap-1.5 text-sm font-semibold text-slate-700"><span style={{color:"#17252d"}}>Cidade (gerada automaticamente)</span><select style={{backgroundColor:mapsState && !citiesLoading && mapsCities.length > 0 ? "#f4f7f9" : "#dce4e9",color:"#17252d",borderColor:"#aebdc6",colorScheme:"light",WebkitTextFillColor:"#17252d",opacity:1}} value={mapsCity} onChange={(e) => setMapsCity(e.target.value)} disabled={!mapsState || citiesLoading || mapsCities.length === 0} className="h-11 min-w-0 rounded-xl border border-slate-200 bg-white px-3 font-normal outline-none focus:border-[#347d79] disabled:bg-slate-100"><option value="">{!mapsState ? 'Selecione primeiro o estado' : citiesLoading ? 'Carregando cidades...' : 'Selecione a cidade'}</option>{mapsCities.map((city) => <option key={city} value={city}>{city}</option>)}</select></label>
