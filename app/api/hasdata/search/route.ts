@@ -25,7 +25,7 @@ export async function POST(request: Request) {
     )
   }
 
-  let body: { niche?: unknown; city?: unknown; state?: unknown }
+  let body: { niche?: unknown; city?: unknown; state?: unknown; country?: unknown }
   try {
     body = await request.json()
   } catch {
@@ -35,15 +35,24 @@ export async function POST(request: Request) {
   const niche = typeof body.niche === 'string' ? body.niche.trim().slice(0, 100) : ''
   const city = typeof body.city === 'string' ? body.city.trim().slice(0, 100) : ''
   const state = typeof body.state === 'string' ? body.state.trim().slice(0, 2).toUpperCase() : ''
+  const country = typeof body.country === 'string' ? body.country.trim().toUpperCase() : 'BR'
+  const supportedCountries = new Set(['BR', 'US', 'GB', 'DE', 'FR', 'IT', 'ES', 'PT', 'NL', 'BE', 'IE', 'AT'])
+
+  if (!supportedCountries.has(country)) {
+    return NextResponse.json({ error: 'País não suportado pelo circuito de faturamento Wise' }, { status: 400 })
+  }
 
   if (!niche || !city || !state) {
     return NextResponse.json({ error: 'Informe o nicho, a cidade e a sigla do estado.' }, { status: 400 })
   }
 
+  const countryNames: Record<string, string> = { BR: 'Brasil', US: 'United States', GB: 'United Kingdom', DE: 'Germany', FR: 'France', IT: 'Italy', ES: 'Spain', PT: 'Portugal', NL: 'Netherlands', BE: 'Belgium', IE: 'Ireland', AT: 'Austria' }
+  const language = country === 'BR' ? 'pt' : country === 'US' || country === 'GB' ? 'en' : 'en'
   const params = new URLSearchParams({
-    q: `${niche} ${city} ${state} Brasil`,
-    gl: 'br',
-    hl: 'pt',
+    q: `${niche} ${city} ${state} ${countryNames[country]}`,
+    country,
+    gl: country.toLowerCase(),
+    hl: language,
   })
 
   try {
