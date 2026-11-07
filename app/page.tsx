@@ -333,7 +333,7 @@ export default function Page() {
   const sendLeadToWhatsapp = (id: string): boolean => {
     const lead = leads.find((item) => item.id === id)
     if (!lead) return false
-    if (internationalMessages(lead).length === 0 && !['Brasil','Brazil','BR',''].includes(lead.country.trim())) {
+    if (internationalMessages(lead).length === 0 && !['BRASIL','BRAZIL','BR',''].includes(lead.country.trim().toUpperCase())) {
       window.alert('Envio bloqueado: o país deste lead não está entre os países internacionais autorizados.')
       return false
     }
