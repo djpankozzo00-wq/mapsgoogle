@@ -396,14 +396,16 @@ export default function Page() {
       let stateName = mapsState
       let cityNames = mapsCities
       if (mapsCountry === 'BR') {
-        const state = brazilStates.find((item) => item.uf === mapsState) || brazilStates[Math.floor(Math.random() * brazilStates.length)]
+        // Sempre sortear um estado novo para a pesquisa nacional; não reutilizar
+        // o estado que ficou selecionado na pesquisa anterior.
+        const availableStates = brazilStates.filter((item) => item.uf !== mapsState)
+        const state = availableStates[Math.floor(Math.random() * availableStates.length)] || brazilStates[Math.floor(Math.random() * brazilStates.length)]
         stateName = state.uf
-        if (cityNames.length === 0 || state.uf !== mapsState) {
-          const response = await fetch('https://servicodados.ibge.gov.br/api/v1/localidades/estados/' + state.uf + '/municipios?orderBy=nome')
-          if (!response.ok) throw new Error('Não foi possível carregar as cidades do IBGE.')
-          const data = await response.json() as Array<{ nome: string }>
-          cityNames = data.map((city) => city.nome)
-        }
+        cityNames = []
+        const response = await fetch('https://servicodados.ibge.gov.br/api/v1/localidades/estados/' + state.uf + '/municipios?orderBy=nome')
+        if (!response.ok) throw new Error('Não foi possível carregar as cidades do IBGE.')
+        const data = await response.json() as Array<{ nome: string }>
+        cityNames = data.map((city) => city.nome)
       } else {
         const location = internationalLocations.US[Math.floor(Math.random() * internationalLocations.US.length)]
         stateName = location.state
