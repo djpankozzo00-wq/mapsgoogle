@@ -6,6 +6,8 @@ export const metadata: Metadata = {
   title: 'ProspecMap — Leads do Google Maps',
   description: 'Organize e acompanhe seus leads encontrados no Google Maps.',
   generator: 'v0.app',
+  manifest: '/manifest.webmanifest',
+  appleWebApp: { capable: true, statusBarStyle: 'black-translucent', title: 'ProspecMap' },
   icons: {
     icon: [
       {
@@ -27,6 +29,7 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   colorScheme: 'light dark',
+  viewportFit: 'cover',
   themeColor: [
     { media: '(prefers-color-scheme: light)', color: 'white' },
     { media: '(prefers-color-scheme: dark)', color: 'black' },
