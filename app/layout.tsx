@@ -3,7 +3,7 @@ import type { Metadata, Viewport } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'ProspecMap — Leads do Google Maps',
+  title: 'ProspecMap',
   description: 'Organize e acompanhe seus leads encontrados no Google Maps.',
   generator: 'v0.app',
   manifest: '/manifest.webmanifest',
