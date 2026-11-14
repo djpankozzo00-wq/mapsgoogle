@@ -440,10 +440,11 @@ export default function Page() {
     let searchCity = mapsCity.trim()
     let searchState = mapsState.trim()
     try {
-      // If the user skips the generator, choose all three values automatically.
-      if (!searchNiche || !searchCity || !searchState) {
+      // No mercado nacional, cada pesquisa sorteia automaticamente um novo nicho,
+      // estado e cidade, sem exigir seleção manual dos campos.
+      if (mapsCountry === 'BR' || !searchNiche || !searchCity || !searchState) {
         const generated = await generateUniqueSearchCombo()
-        if (!generated) throw new Error('Gere uma combinação de nicho, cidade e região antes de pesquisar.')
+        if (!generated) throw new Error('Não foi possível sortear uma nova combinação de nicho, cidade e estado. Tente novamente.')
         searchNiche = generated.niche
         searchCity = generated.city
         searchState = generated.state
