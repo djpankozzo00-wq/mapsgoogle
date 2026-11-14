@@ -1,26 +1,31 @@
-<svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <style>
-    @media (prefers-color-scheme: light) {
-      .background { fill: black; }
-      .foreground { fill: white; }
-    }
-    @media (prefers-color-scheme: dark) {
-      .background { fill: white; }
-      .foreground { fill: black; }
-    }
-  </style>
-  <g clip-path="url(#clip0_7960_43945)">
-    <rect class="background" width="180" height="180" rx="37" />
-    <g style="transform: scale(95%); transform-origin: center">
-      <path class="foreground"
-        d="M101.141 53H136.632C151.023 53 162.689 64.6662 162.689 79.0573V112.904H148.112V79.0573C148.112 78.7105 148.098 78.3662 148.072 78.0251L112.581 112.898C112.701 112.902 112.821 112.904 112.941 112.904H148.112V126.672H112.941C98.5504 126.672 86.5638 114.891 86.5638 100.5V66.7434H101.141V100.5C101.141 101.15 101.191 101.792 101.289 102.422L137.56 66.7816C137.255 66.7563 136.945 66.7434 136.632 66.7434H101.141V53Z" />
-      <path class="foreground"
-        d="M65.2926 124.136L14 66.7372H34.6355L64.7495 100.436V66.7372H80.1365V118.47C80.1365 126.278 70.4953 129.958 65.2926 124.136Z" />
-    </g>
-  </g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
   <defs>
-    <clipPath id="clip0_7960_43945">
-      <rect width="180" height="180" fill="white" />
-    </clipPath>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#142b32"/>
+      <stop offset="1" stop-color="#071319"/>
+    </linearGradient>
+    <linearGradient id="pin" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#e2c66b"/>
+      <stop offset="1" stop-color="#b89536"/>
+    </linearGradient>
+    <linearGradient id="green" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#24a879"/>
+      <stop offset="1" stop-color="#087653"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="12" stdDeviation="12" flood-color="#000" flood-opacity=".35"/>
+    </filter>
   </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <path d="M76 174 174 112l112 54 112-56 38 22v210l-104 58-112-54-106 58-38-22Z" fill="#16343a" stroke="#2a514f" stroke-width="9" stroke-linejoin="round"/>
+  <path d="m76 174 98 54v214M174 228l112-62v212l-112 64M286 166l112 56v210M398 222l38-22" fill="none" stroke="#34796b" stroke-width="8" opacity=".9" stroke-linejoin="round"/>
+  <path d="M112 326c42-55 76-65 113-29 29 28 45 22 70-15 23-34 46-42 86-22" fill="none" stroke="url(#green)" stroke-width="18" stroke-linecap="round" stroke-dasharray="2 1"/>
+  <circle cx="112" cy="326" r="15" fill="#e4c96e" stroke="#102329" stroke-width="8"/>
+  <g filter="url(#shadow)">
+    <path d="M256 72c-78 0-141 61-141 137 0 103 141 239 141 239s141-136 141-239C397 133 334 72 256 72Z" fill="url(#pin)" stroke="#f0d98e" stroke-width="9"/>
+    <circle cx="256" cy="208" r="72" fill="#102329"/>
+    <path d="M213 239v-61l43-25 43 25v61M229 239v-39h54v39M245 239v-24h22v24" fill="none" stroke="#f5f1df" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M213 178h86" stroke="#24a879" stroke-width="11" stroke-linecap="round"/>
+  </g>
+  <path d="M100 438h312" stroke="#24a879" stroke-width="10" stroke-linecap="round" opacity=".85"/>
 </svg>
