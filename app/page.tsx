@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from 'react'
 import SitePhotoManager, { type SitePhoto } from '@/components/site-photo-manager'
-import { ArrowLeft, ArrowRight, Building2, Check, CheckCircle2, ChevronDown, ExternalLink, Filter, MapPin, MessageCircle, Pencil, Search, ShieldCheck, StickyNote, Trash2, X, MapPinned, LoaderCircle } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Building2, Check, CheckCircle2, ChevronDown, ExternalLink, Filter, MapPin, MessageCircle, Pencil, Search, ShieldCheck, Sparkles, StickyNote, Trash2, X, MapPinned, LoaderCircle } from 'lucide-react'
 
 type LeadStatus = 'A contactar' | 'Em negociação' | 'Fechado' | 'Rejeitado'
 type WhatsappCheck = 'Não verificado' | 'Confirmado no WhatsApp' | 'Não encontrado no WhatsApp'
